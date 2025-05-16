@@ -1,0 +1,50 @@
+/* frontend/src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-family: 'Poppins', sans-serif;
+  --color-dark-teal: #003135;
+  --color-deep-teal: #024950;
+  --color-rust: #964734;
+  --color-jade-green: #0FAA4F;
+  --color-light-aqua: #AFDDE5;
+}
+
+body {
+  font-family: var(--font-family);
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-jade-green text-white font-medium py-2 px-4 rounded hover:opacity-90 transition-all duration-300;
+  }
+  
+  .btn-secondary {
+    @apply bg-deep-teal text-white font-medium py-2 px-4 rounded hover:opacity-90 transition-all duration-300;
+  }
+  
+  .btn-danger {
+    @apply bg-rust text-white font-medium py-2 px-4 rounded hover:opacity-90 transition-all duration-300;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow p-6 transition-all duration-300 hover:shadow-md;
+  }
+  
+  .input-field {
+    @apply w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-jade-green font-normal;
+  }
+  
+  .heading-1 {
+    @apply text-3xl font-bold text-dark-teal mb-4;
+  }
+  
+  .heading-2 {
+    @apply text-2xl font-semibold text-dark-teal mb-3;
+  }
+  
+  .heading-3 {
+    @apply text-xl font-medium text-dark-teal mb-2;
+  }
+}
