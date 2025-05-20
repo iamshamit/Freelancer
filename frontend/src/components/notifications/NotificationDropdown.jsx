@@ -1,102 +1,86 @@
-// frontend/src/components/notifications/NotificationDropdown.jsx
-import { useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
-import AuthContext from "../../context/AuthContext";
-import api from "../../services/api";
-import SkeletonLoader from "../common/SkeletonLoader";
+// src/components/notifications/NotificationDropdown.jsx
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Bell, Check, ChevronRight, X } from 'lucide-react';
+import api from '../../services/api';
+import SkeletonLoader from '../common/SkeletonLoader';
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useContext(AuthContext);
+  const dropdownRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Fetch notifications
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => api.notification.getAll(),
+    staleTime: 60 * 1000, // 1 minute
+  });
+
+  // Fetch unread count
+  const { data: unreadCount } = useQuery({
+    queryKey: ['notificationsUnreadCount'],
+    queryFn: () => api.notification.getUnreadCount(),
+    staleTime: 60 * 1000, // 1 minute
+    refetchInterval: 60 * 1000, // Refetch every minute
+  });
+
+  // Mark as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: (id) => api.notification.markAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notificationsUnreadCount'] });
+    },
+  });
+
+  // Mark all as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => api.notification.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notificationsUnreadCount'] });
+    },
+  });
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isOpen && !event.target.closest(".notification-dropdown")) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, []);
 
-  // Get notifications
-  const { data: notifications, isLoading } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => api.notification.getAll(),
-    enabled: !!user,
-    select: (data) => data.data,
-    refetchInterval: 30000, // Refetch every 30 seconds
-  });
-
-  // Get unread count
-  const { data: unreadData } = useQuery({
-    queryKey: ["notifications", "unread"],
-    queryFn: () => api.notification.getUnreadCount(),
-    enabled: !!user,
-    select: (data) => data.data,
-    refetchInterval: 30000, // Refetch every 30 seconds
-  });
-
-  // Mark notification as read
-  const markAsReadMutation = useMutation({
-    mutationFn: (id) => api.notification.markAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications", "unread"] });
-    },
-  });
-
-  // Mark all as read
-  const markAllAsReadMutation = useMutation({
-    mutationFn: () => api.notification.markAllAsRead(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications", "unread"] });
-    },
-  });
-
-  const handleMarkAsRead = (id) => {
+  // Handle mark as read
+  const handleMarkAsRead = (id, e) => {
+    e.stopPropagation();
     markAsReadMutation.mutate(id);
   };
 
+  // Handle mark all as read
   const handleMarkAllAsRead = () => {
     markAllAsReadMutation.mutate();
   };
 
-  const unreadCount = unreadData?.count || 0;
-
   return (
-    <div className="relative notification-dropdown">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-1 rounded-full text-white hover:bg-deep-teal focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-jade-green relative"
+        className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none relative"
+        aria-label="Notifications"
       >
-        <span className="sr-only">View notifications</span>
-        <svg
-          className="h-6 w-6"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
+        <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-rust text-white text-xs flex items-center justify-center transform translate-x-1 -translate-y-1">
-            {unreadCount > 9 ? "9+" : unreadCount}
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
@@ -104,82 +88,97 @@ const NotificationDropdown = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10"
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={{ opacity: 0, y: 10 }}
             transition={{ duration: 0.2 }}
+                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
           >
-            <div className="py-1">
-              <div className="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="text-sm font-medium text-gray-900">
-                  Notifications
-                </h3>
-                {unreadCount > 0 && (
-                  <button
-                    onClick={handleMarkAllAsRead}
-                    className="text-xs text-jade-green hover:text-deep-teal"
-                  >
-                    Mark all as read
-                  </button>
-                )}
-              </div>
-
-              <div className="max-h-80 overflow-y-auto">
-                {isLoading ? (
-                  <div className="px-4 py-2">
-                    <SkeletonLoader count={3} />
-                  </div>
-                ) : notifications && notifications.length > 0 ? (
-                  notifications.map((notification) => (
-                    <div
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-orange-500 hover:text-orange-600 font-medium"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+            
+            <div className="max-h-80 overflow-y-auto">
+              {isLoading ? (
+                <div className="p-4">
+                  <SkeletonLoader type="list" count={3} />
+                </div>
+              ) : notifications?.length > 0 ? (
+                <div className="py-2">
+                  {notifications.map((notification) => (
+                    <Link
                       key={notification._id}
-                      className={`px-4 py-3 hover:bg-gray-50 border-b border-gray-100 ${
-                        !notification.read ? "bg-light-aqua bg-opacity-20" : ""
+                      to={notification.link || '#'}
+                      onClick={() => !notification.read && markAsReadMutation.mutate(notification._id)}
+                      className={`block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
+                        !notification.read ? 'bg-orange-50 dark:bg-orange-900/10' : ''
                       }`}
                     >
                       <div className="flex items-start">
-                        {notification.sender?.profilePicture ? (
-                          <img
-                            src={notification.sender.profilePicture}
-                            alt={notification.sender.name}
-                            className="h-8 w-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-deep-teal flex items-center justify-center text-white">
-                            {notification.sender?.name
-                              ?.charAt(0)
-                              .toUpperCase() || "S"}
-                          </div>
-                        )}
+                        <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+                          notification.type === 'application' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' :
+                          notification.type === 'message' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                          notification.type === 'payment' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' :
+                          notification.type === 'milestone' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
+                          'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                        }`}>
+                          {notification.icon}
+                        </div>
                         <div className="ml-3 flex-1">
-                          <p className="text-sm text-gray-700">
+                          <p className={`text-sm font-medium ${
+                            !notification.read ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'
+                          }`}>
+                            {notification.title}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {format(
-                              new Date(notification.createdAt),
-                              "MMM d, yyyy h:mm a"
-                            )}
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            {notification.timeAgo}
                           </p>
                         </div>
                         {!notification.read && (
                           <button
-                            onClick={() => handleMarkAsRead(notification._id)}
-                            className="text-xs text-jade-green hover:text-deep-teal"
+                            onClick={(e) => handleMarkAsRead(notification._id, e)}
+                            className="ml-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                            aria-label="Mark as read"
                           >
-                            Mark as read
+                            <Check className="h-4 w-4" />
                           </button>
                         )}
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-4 py-6 text-center text-gray-500">
-                    <p>No notifications yet</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 px-4 text-center">
+                  <div className="flex justify-center mb-4">
+                    <Bell className="h-12 w-12 text-gray-400" />
                   </div>
-                )}
-              </div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    No notifications yet
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+              <Link
+                to="/notifications"
+                className="block w-full text-center px-4 py-2 text-sm font-medium text-orange-500 hover:text-orange-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                View all notifications
+                <ChevronRight className="inline-block h-4 w-4 ml-1" />
+              </Link>
             </div>
           </motion.div>
         )}

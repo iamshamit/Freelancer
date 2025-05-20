@@ -54,15 +54,14 @@ const api = {
   // Job endpoints
   job: {
     create: (jobData) => axiosInstance.post('/jobs', jobData),
-    getAll: (params) => axiosInstance.get('/jobs', { params }),
-    getById: (id) => axiosInstance.get(`/jobs/${id}`),
+    getAll: (params) => axiosInstance.get('/jobs', { params }).then(res => res.data),
+    getById: (id) => axiosInstance.get(`/jobs/${id}`).then(res => res.data),
     apply: (id) => axiosInstance.post(`/jobs/${id}/apply`),
     selectFreelancer: (jobId, freelancerId) => axiosInstance.put(`/jobs/${jobId}/select/${freelancerId}`),
     updateMilestone: (id, percentage) => axiosInstance.put(`/jobs/${id}/milestone`, { percentage }),
     getEmployerJobs: () => axiosInstance.get('/jobs/employer'),
     getFreelancerJobs: () => axiosInstance.get('/jobs/freelancer'),
-    rateFreelancer: (id, rating, review) => axiosInstance.post(`/jobs/${id}/rate`, { rating, review }),
-    getDomains: () => axiosInstance.get('/jobs/domains')
+    rateFreelancer: (id, rating, review) => axiosInstance.post(`/jobs/${id}/rate`, { rating, review })
   },
   
   // Chat endpoints
@@ -81,7 +80,16 @@ const api = {
     getUnreadCount: () => axiosInstance.get('/notifications/unread-count'),
     markAsRead: (id) => axiosInstance.put(`/notifications/${id}`),
     markAllAsRead: () => axiosInstance.put('/notifications/read-all')
-  }
+  },
+
+  // Domain endpoints
+  domains: {
+  getAll: () => axiosInstance.get('/domains').then(res => res.data),
+  getById: (id) => axiosInstance.get(`/domains/${id}`).then(res => res.data),
+  create: (domainData) => axiosInstance.post('/domains', domainData),
+  update: (id, domainData) => axiosInstance.put(`/domains/${id}`, domainData)
+}
+
 };
 
 export default api;

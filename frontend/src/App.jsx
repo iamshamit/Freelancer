@@ -17,11 +17,15 @@ import EmployerDashboard from "./pages/dashboard/EmployerDashboard";
 // Profile Pages
 import ProfilePage from "./pages/profile/ProfilePage";
 
+// Job Pages
+import JobListingPage from "./pages/jobs/JobListingPage";
+import JobDetailPage from "./pages/jobs/JobDetailsPage";
+
+// Post Job Page
+import PostJobPage from "./pages/jobs/PostJobPage"; 
+
 // Placeholder for other pages
 const AdminDashboard = () => <div>Admin Dashboard</div>;
-const JobListingPage = () => <div>Job Listing Page</div>;
-const PostJobPage = () => <div>Post Job Page</div>;
-const JobDetailPage = () => <div>Job Detail Page</div>;
 const ChatPage = () => <div>Chat Page</div>;
 
 function App({ darkMode, setDarkMode }) {
@@ -96,7 +100,7 @@ function App({ darkMode, setDarkMode }) {
             }
           />
           <Route
-            path="/post-job"
+            path="employer/post-job"
             element={
               <PrivateRoute role="employer">
                 <PostJobPage />
