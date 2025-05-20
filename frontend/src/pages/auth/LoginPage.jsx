@@ -72,12 +72,6 @@ const LoginPage = ({ darkMode, setdarkMode }) => {
       if (clearError) clearError();
       saveFormData(values);
       await login(values);
-      
-      // Show success animation before redirecting
-      setLoginSuccess(true);
-      setTimeout(() => {
-        navigate(from);
-      }, 1500);
     } catch (err) {
       console.error('Login error:', err);
       
@@ -86,7 +80,6 @@ const LoginPage = ({ darkMode, setdarkMode }) => {
         x: [0, -10, 10, -10, 10, 0],
         transition: { duration: 0.5 }
       });
-      
       // More specific error handling
       if (err.message?.includes('credentials')) {
         setFieldError('email', 'Invalid email or password');
