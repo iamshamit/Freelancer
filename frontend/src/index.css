@@ -2,6 +2,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+html, body {
+  background-color: #0f172a; /* Your dark background color */
+}
+
+
 @theme {
   --font-family: 'Poppins', sans-serif;
   --color-dark-teal: #003135;

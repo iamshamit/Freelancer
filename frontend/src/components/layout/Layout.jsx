@@ -6,7 +6,7 @@ import Footer from './Footer';
 import AuthContext from '../../context/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 
-const Layout = ({ children }) => {
+const Layout = ({ children, darkMode, setDarkMode }) => {
   const { loading } = useContext(AuthContext);
 
   if (loading) {
@@ -14,8 +14,8 @@ const Layout = ({ children }) => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div className={`flex flex-col min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
       <motion.main 
         className="flex-grow"
         initial={{ opacity: 0 }}
@@ -25,7 +25,7 @@ const Layout = ({ children }) => {
       >
         {children}
       </motion.main>
-      <Footer />
+      <Footer darkMode={darkMode} />
     </div>
   );
 };

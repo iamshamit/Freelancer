@@ -1,5 +1,5 @@
 // frontend/src/context/AuthContext.jsx
-import { createContext, useReducer, useEffect } from 'react';
+import { createContext, useReducer, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
@@ -51,28 +51,28 @@ export const AuthProvider = ({ children }) => {
   const queryClient = useQueryClient();
 
   // Initialize auth state from localStorage
-useEffect(() => {
-  const initializeAuth = async () => {
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        dispatch({ type: AUTH_ACTIONS.AUTH_SUCCESS, payload: parsedUser });
-        // Set default auth header
-        api.setAuthToken(parsedUser.token);
-      } else {
-        // If no user, explicitly set loading to false
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          dispatch({ type: AUTH_ACTIONS.AUTH_SUCCESS, payload: parsedUser });
+          // Set default auth header
+          api.setAuthToken(parsedUser.token);
+        } else {
+          // If no user, explicitly set loading to false
+          dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        localStorage.removeItem('user');
         dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       }
-    } catch (error) {
-      console.error('Error initializing auth:', error);
-      localStorage.removeItem('user');
-      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
-    }
-  };
+    };
 
-  initializeAuth();
-}, []);
+    initializeAuth();
+  }, []);
 
   // Register mutation
   const registerMutation = useMutation({
@@ -148,8 +148,8 @@ useEffect(() => {
     }
   });
 
-  // Logout function
-  const logout = () => {
+  // Logout function - wrapped in useCallback
+  const logout = useCallback(() => {
     localStorage.removeItem('user');
     api.removeAuthToken();
     dispatch({ type: AUTH_ACTIONS.LOGOUT });
@@ -157,28 +157,51 @@ useEffect(() => {
     queryClient.clear();
     toast.success('Logged out successfully');
     navigate('/');
-  };
+  }, [navigate, queryClient]);
 
-  // Clear error
-  const clearError = () => {
+  // Clear error - wrapped in useCallback
+  const clearError = useCallback(() => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
-  };
+  }, []);
+
+  // Memoize the register function
+  const register = useCallback((userData) => {
+    registerMutation.mutate(userData);
+  }, [registerMutation]);
+
+  // Memoize the login function
+  const login = useCallback((credentials) => {
+    loginMutation.mutate(credentials);
+  }, [loginMutation]);
+
+  // Memoize the updateProfile function
+  const updateProfile = useCallback((userData) => {
+    updateProfileMutation.mutate(userData);
+  }, [updateProfileMutation]);
+
+  // Memoize the uploadProfilePicture function
+  const uploadProfilePicture = useCallback((imageData) => {
+    uploadProfilePictureMutation.mutate(imageData);
+  }, [uploadProfilePictureMutation]);
+
+  // Memoize the isAuthLoading value
+  const isAuthLoading = 
+    registerMutation.isPending || 
+    loginMutation.isPending || 
+    updateProfileMutation.isPending || 
+    uploadProfilePictureMutation.isPending;
 
   return (
     <AuthContext.Provider
       value={{
         ...state,
-        register: registerMutation.mutate,
-        login: loginMutation.mutate,
+        register,
+        login,
         logout,
-        updateProfile: updateProfileMutation.mutate,
-        uploadProfilePicture: uploadProfilePictureMutation.mutate,
+        updateProfile,
+        uploadProfilePicture,
         clearError,
-        isAuthLoading: 
-          registerMutation.isPending || 
-          loginMutation.isPending || 
-          updateProfileMutation.isPending || 
-          uploadProfilePictureMutation.isPending
+        isAuthLoading
       }}
     >
       {children}
