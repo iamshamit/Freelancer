@@ -20,6 +20,12 @@ import ProfilePage from "./pages/profile/ProfilePage";
 // Job Pages
 import JobListingPage from "./pages/jobs/JobListingPage";
 import JobDetailPage from "./pages/jobs/JobDetailsPage";
+import EmployerJobPage from "./pages/employer/EmployerJobsPage";
+
+// Applicant Pages
+import ApplicantReviewPage from "./pages/applicants/ApplicantReviewPage";
+import ApplicationsPage from "./pages/applicants/ApplicationsPage";
+
 
 // Post Job Page
 import PostJobPage from "./pages/jobs/PostJobPage"; 
@@ -89,6 +95,14 @@ function App({ darkMode, setDarkMode }) {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/applications"
+            element={
+              <PrivateRoute role="freelancer">
+                <ApplicationsPage />
+              </PrivateRoute>
+            }
+          />
 
           {/* Employer Routes */}
           <Route
@@ -104,6 +118,22 @@ function App({ darkMode, setDarkMode }) {
             element={
               <PrivateRoute role="employer">
                 <PostJobPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="employer/jobs"
+            element={
+              <PrivateRoute role="employer">
+                <EmployerJobPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="employer/jobs/:jobId/applicants"
+            element={
+              <PrivateRoute role="employer">
+                <ApplicantReviewPage />
               </PrivateRoute>
             }
           />

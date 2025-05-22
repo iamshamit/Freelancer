@@ -15,14 +15,16 @@ const NotificationDropdown = () => {
   // Fetch notifications
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => api.notification.getAll(),
+    queryFn: () => api.notification.getAll().then(res => res.data),
     staleTime: 60 * 1000, // 1 minute
   });
+
+  console.log('notifications', notifications);
 
   // Fetch unread count
   const { data: unreadCount } = useQuery({
     queryKey: ['notificationsUnreadCount'],
-    queryFn: () => api.notification.getUnreadCount(),
+    queryFn: () => api.notification.getUnreadCount().then(res => res.data.count),
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 60 * 1000, // Refetch every minute
   });
@@ -130,7 +132,7 @@ const NotificationDropdown = () => {
                           notification.type === 'milestone' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
                           'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                         }`}>
-                          {notification.icon}
+                          <img src={notification.sender.profilePicture} alt={notification.sender.name} className="h-8 w-8 rounded-full object-cover" />
                         </div>
                         <div className="ml-3 flex-1">
                           <p className={`text-sm font-medium ${

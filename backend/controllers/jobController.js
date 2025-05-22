@@ -1,5 +1,5 @@
 // backend/controllers/jobController.js
-const { Job, User, Transaction, Notification } = require("../models");
+const { Job, User, Transaction, Notification, Escrow } = require("../models");
 
 // @desc    Create a new job
 // @route   POST /api/jobs
@@ -16,13 +16,22 @@ const createJob = async (req, res) => {
       employer: req.user._id,
     });
 
+    // Create escrow record
+    await Escrow.create({
+      job: job._id,
+      employer: req.user._id,
+      totalAmount: budget,
+      status: 'pending',
+      milestones: []
+    });
+
     // Create a transaction record for the deposit
     await Transaction.create({
       job: job._id,
       amount: budget,
       type: "deposit",
       from: req.user._id,
-      to: req.user._id, // This will be updated to the freelancer when assigned
+      to: null,
       status: "completed",
     });
 
@@ -32,6 +41,43 @@ const createJob = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// @desc    Get freelancer's applied jobs
+// @route   GET /api/jobs/applied
+// @access  Private/Freelancer
+const getAppliedJobs = async (req, res) => {
+  try {
+    const appliedJobs = await Job.find({
+      "applicants.freelancer": req.user._id
+    })
+    .populate("employer", "name profilePicture")
+    .populate("domain", "name icon")
+    .sort({ createdAt: -1 });
+
+    // Add a flag to indicate the application status for each job
+    const jobsWithApplicationStatus = appliedJobs.map(job => {
+      const jobObj = job.toObject();
+      
+      // Check if the job is assigned to this freelancer
+      if (job.freelancer && job.freelancer.toString() === req.user._id.toString()) {
+        jobObj.applicationStatus = 'accepted';
+      } else if (job.status === 'open') {
+        jobObj.applicationStatus = 'pending';
+      } else {
+        jobObj.applicationStatus = 'rejected';
+      }
+      
+      return jobObj;
+    });
+
+    res.json(jobsWithApplicationStatus);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 // @desc    Get all jobs
 // @route   GET /api/jobs
@@ -89,7 +135,19 @@ const getJobById = async (req, res) => {
       .populate("applicants.freelancer", "name profilePicture");
 
     if (job) {
-      res.json(job);
+      // Get employer job count
+      let employerJobCount = 0;
+      if (job.employer && job.employer._id) {
+        employerJobCount = await Job.countDocuments({ employer: job.employer._id });
+      }
+
+      // Convert to object and add jobCount to employer
+      const jobObj = job.toObject();
+      if (jobObj.employer) {
+        jobObj.employer.jobCount = employerJobCount;
+      }
+
+      res.json(jobObj);
     } else {
       res.status(404).json({ message: "Job not found" });
     }
@@ -184,6 +242,14 @@ const selectFreelancer = async (req, res) => {
     job.status = "assigned";
     await job.save();
 
+    // Update escrow status
+    const escrow = await Escrow.findOne({ job: job._id });
+    if (escrow) {
+      escrow.freelancer = freelancerId;
+      escrow.status = 'active';
+      await escrow.save();
+    }
+
     // Update transaction
     const transaction = await Transaction.findOne({
       job: job._id,
@@ -260,6 +326,28 @@ const updateMilestone = async (req, res) => {
 
     await job.save();
 
+    // Update escrow
+    const escrow = await Escrow.findOne({ job: job._id });
+    if (escrow) {
+      // Add milestone to escrow
+      escrow.milestones.push({
+        percentage,
+        amount: paymentAmount,
+        released: true,
+        releasedAt: Date.now()
+      });
+      
+      // Update released amount
+      escrow.releasedAmount += paymentAmount;
+      
+      // Check if all funds released
+      if (percentage === 100) {
+        escrow.status = 'completed';
+      }
+      
+      await escrow.save();
+    }
+
     // Create transaction record for the payment
     await Transaction.create({
       job: job._id,
@@ -289,6 +377,7 @@ const updateMilestone = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // @desc    Get employer's jobs
 // @route   GET /api/jobs/employer
@@ -424,4 +513,5 @@ module.exports = {
   getEmployerJobs,
   getFreelancerJobs,
   rateFreelancer,
+  getAppliedJobs,
 };

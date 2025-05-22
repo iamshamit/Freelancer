@@ -61,7 +61,8 @@ const api = {
     updateMilestone: (id, percentage) => axiosInstance.put(`/jobs/${id}/milestone`, { percentage }),
     getEmployerJobs: () => axiosInstance.get('/jobs/employer'),
     getFreelancerJobs: () => axiosInstance.get('/jobs/freelancer'),
-    rateFreelancer: (id, rating, review) => axiosInstance.post(`/jobs/${id}/rate`, { rating, review })
+    rateFreelancer: (id, rating, review) => axiosInstance.post(`/jobs/${id}/rate`, { rating, review }),
+    getAppliedJobs: () => axiosInstance.get('/jobs/applied').then(res => res.data)
   },
   
   // Chat endpoints

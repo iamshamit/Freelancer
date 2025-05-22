@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Menu, X, Home, Briefcase, MessageSquare, Bell, User, 
   Settings, LogOut, Moon, Sun, ChevronDown, Search,
-  ChevronLeft, ChevronRight, Plus
+  ChevronLeft, ChevronRight, Plus,
+  FileText
 } from 'lucide-react';
 import { ErrorBoundary } from 'react-error-boundary';
 import AuthContext from '../../context/AuthContext';
@@ -81,6 +82,11 @@ const DashboardLayout = ({ children }) => {
         icon: <Briefcase className="w-5 h-5" />, 
         path: '/jobs' 
       },
+      {
+        name: 'My Applications',
+        icon: <FileText className="w-5 h-5" />,
+        path: '/applications'
+      }
     ];
 
     const employerItems = [
@@ -93,7 +99,7 @@ const DashboardLayout = ({ children }) => {
         name: 'Post a Job', 
         icon: <Plus className="w-5 h-5" />, 
         path: '/employer/post-job' 
-      },
+      }
     ];
 
     return user?.role === 'freelancer' 

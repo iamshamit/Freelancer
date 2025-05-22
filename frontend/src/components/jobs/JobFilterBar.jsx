@@ -1,10 +1,10 @@
 // src/components/jobs/JobFilterBar.jsx
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
 import api from '../../services/api';
 
-const JobFilterBar = ({ onFilterChange }) => {
+const JobFilterBar = ({ onFilterChange, viewToggle }) => {
   const [search, setSearch] = useState('');
   const [domain, setDomain] = useState('');
   const [minBudget, setMinBudget] = useState('');
@@ -62,16 +62,19 @@ const JobFilterBar = ({ onFilterChange }) => {
           </div>
         </div>
         
+        {/* View toggle */}
+        <div className="hidden md:block">
+          {viewToggle}
+        </div>
+        
         {/* Filter toggle button */}
         <button
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
         >
-          <Filter className="h-4 w-4 mr-2" />
+          <SlidersHorizontal className="h-4 w-4 mr-2" />
           Filters
         </button>
-        
-        {/* Apply/Reset buttons */}
         {showFilters && (
           <>
             <button
@@ -89,6 +92,11 @@ const JobFilterBar = ({ onFilterChange }) => {
             </button>
           </>
         )}
+      </div>
+      
+      {/* Mobile view toggle */}
+      <div className="md:hidden flex justify-center mt-4">
+        {viewToggle}
       </div>
       
       {/* Expanded filters */}
