@@ -1,5 +1,6 @@
 // backend/controllers/jobController.js
 const { Job, User, Transaction, Notification, Escrow } = require("../models");
+const { createEscrowDeposit, createEscrowRelease } = require("../utils/transactionHelpers");
 
 // @desc    Create a new job
 // @route   POST /api/jobs
@@ -17,7 +18,7 @@ const createJob = async (req, res) => {
     });
 
     // Create escrow record
-    await Escrow.create({
+    const escrow = await Escrow.create({
       job: job._id,
       employer: req.user._id,
       totalAmount: budget,
@@ -25,15 +26,8 @@ const createJob = async (req, res) => {
       milestones: []
     });
 
-    // Create a transaction record for the deposit
-    await Transaction.create({
-      job: job._id,
-      amount: budget,
-      type: "deposit",
-      from: req.user._id,
-      to: null,
-      status: "completed",
-    });
+    // Create transaction record for employer depositing money into escrow
+    await createEscrowDeposit(job._id, req.user._id, escrow._id, budget);
 
     res.status(201).json(job);
   } catch (error) {
@@ -250,17 +244,6 @@ const selectFreelancer = async (req, res) => {
       await escrow.save();
     }
 
-    // Update transaction
-    const transaction = await Transaction.findOne({
-      job: job._id,
-      type: "deposit",
-    });
-
-    if (transaction) {
-      transaction.to = freelancerId;
-      await transaction.save();
-    }
-
     // Create notification for freelancer
     await Notification.create({
       recipient: freelancerId,
@@ -348,16 +331,8 @@ const updateMilestone = async (req, res) => {
       await escrow.save();
     }
 
-    // Create transaction record for the payment
-    await Transaction.create({
-      job: job._id,
-      amount: paymentAmount,
-      type: "release",
-      from: req.user._id,
-      to: job.freelancer,
-      percentage,
-      status: "completed",
-    });
+    // Create transaction record for releasing payment from escrow to freelancer
+    await createEscrowRelease(job._id, escrow._id, job.freelancer, paymentAmount, percentage);
 
     // Create notification for freelancer
     await Notification.create({

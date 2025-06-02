@@ -54,8 +54,8 @@ const ProfilePage = ({ darkMode, toggleDarkMode }) => {
   } = useQuery({
     queryKey: ['profile', profileId],
     queryFn: () => isOwnProfile 
-      ? api.user.getProfile().then(res => res.data)
-      : api.user.getById(profileId).then(res => res.data),
+      ? api.user.getProfile()
+      : api.user.getById(profileId),
     enabled: !!profileId,
   });
   

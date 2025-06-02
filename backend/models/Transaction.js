@@ -18,13 +18,23 @@ const transactionSchema = new mongoose.Schema({
   },
   from: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    refPath: 'fromModel',
     required: true
+  },
+  fromModel: {
+    type: String,
+    required: true,
+    enum: ['User', 'Escrow']
   },
   to: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    refPath: 'toModel',
     required: true
+  },
+  toModel: {
+    type: String,
+    required: true,
+    enum: ['User', 'Escrow']
   },
   percentage: {
     type: Number,

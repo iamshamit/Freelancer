@@ -1,6 +1,7 @@
 // src/components/common/EmptyState.jsx
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import React from 'react';
 
 const EmptyState = ({ 
   title, 
@@ -18,7 +19,7 @@ const EmptyState = ({
       transition={{ duration: 0.5 }}
       className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center ${className}`}
     >
-      {icon && (
+      {icon && React.isValidElement(icon) && (
         <div className="flex justify-center mb-4 text-gray-400 dark:text-gray-500">
           {icon}
         </div>

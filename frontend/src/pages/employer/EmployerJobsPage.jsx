@@ -30,7 +30,7 @@ const EmployerJobsPage = ({ darkMode, toggleDarkMode }) => {
     refetch,
   } = useQuery({
     queryKey: ["employerJobs"],
-    queryFn: () => api.job.getEmployerJobs().then((res) => res.data),
+    queryFn: () => api.job.getEmployerJobs(),
   });
 
   const handleFilterChange = (newFilters) => {
@@ -93,7 +93,7 @@ const EmployerJobsPage = ({ darkMode, toggleDarkMode }) => {
             ) : (
               <div className="space-y-4">
                 {[...Array(6)].map((_, i) => (
-                  <SkeletonLoader key={i} type="list-item" />
+                  <SkeletonLoader key={i} type="list-jobs" />
                 ))}
               </div>
             )

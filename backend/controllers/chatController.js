@@ -86,6 +86,12 @@ const sendMessage = async (req, res) => {
   try {
     const { content } = req.body;
 
+    console.log('SendMessage request:', { chatId: req.params.id, content, userId: req.user._id });
+
+    if (!content || content.trim() === '') {
+      return res.status(400).json({ message: 'Message content is required' });
+    }
+
     const chat = await Chat.findById(req.params.id);
 
     if (!chat) {
@@ -103,12 +109,14 @@ const sendMessage = async (req, res) => {
     // Add message
     const message = {
       sender: req.user._id,
-      content,
+      content: content.trim(),
       timestamp: Date.now()
     };
 
     chat.messages.push(message);
     await chat.save();
+
+    console.log('Message saved successfully:', message);
 
     // Determine recipient
     const recipient = chat.employer.toString() === req.user._id.toString()
@@ -127,7 +135,7 @@ const sendMessage = async (req, res) => {
 
     // Populate sender info for the response
     const populatedMessage = {
-      ...message.toObject(),
+      ...message,
       sender: {
         _id: req.user._id,
         name: req.user.name,
@@ -157,7 +165,7 @@ const getUserChats = async (req, res) => {
       .populate('job', 'title status')
       .populate('employer', 'name profilePicture')
       .populate('freelancer', 'name profilePicture')
-      .sort({ 'messages.timestamp': -1 });
+      .sort({ updatedAt: -1 });
 
     res.json(chats);
   } catch (error) {
@@ -181,7 +189,7 @@ const getArchivedChats = async (req, res) => {
       .populate('job', 'title status')
       .populate('employer', 'name profilePicture')
       .populate('freelancer', 'name profilePicture')
-      .sort({ 'messages.timestamp': -1 });
+      .sort({ updatedAt: -1 });
 
     res.json(chats);
   } catch (error) {

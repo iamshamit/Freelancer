@@ -26,18 +26,22 @@ import EmployerJobPage from "./pages/employer/EmployerJobsPage";
 import ApplicantReviewPage from "./pages/applicants/ApplicantReviewPage";
 import ApplicationsPage from "./pages/applicants/ApplicationsPage";
 
+// Chat Pages
+import ChatPage from "./pages/chat/ChatPage";
+import ArchivedChatsPage from "./pages/chat/ArchivedChatsPage";
+import { ChatProvider } from './context/ChatContext';
 
 // Post Job Page
 import PostJobPage from "./pages/jobs/PostJobPage"; 
 
 // Placeholder for other pages
 const AdminDashboard = () => <div>Admin Dashboard</div>;
-const ChatPage = () => <div>Chat Page</div>;
 
 function App({ darkMode, setDarkMode }) {
   return (
     <Router>
       <AuthProvider>
+      <ChatProvider>
         <Toaster
           position="top-right"
           toastOptions={{
@@ -156,6 +160,22 @@ function App({ darkMode, setDarkMode }) {
             }
           />
           <Route
+            path="/messages"
+            element={
+              <PrivateRoute>
+                <ChatPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/messages/archived"
+            element={
+              <PrivateRoute>
+                <ArchivedChatsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/job/:id"
             element={
               <PrivateRoute>
@@ -182,6 +202,7 @@ function App({ darkMode, setDarkMode }) {
             }
           />
         </Routes>
+      </ChatProvider>
       </AuthProvider>
     </Router>
   );
