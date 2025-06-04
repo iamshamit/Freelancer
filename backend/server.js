@@ -11,6 +11,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const domainRoutes = require('./routes/domainRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +42,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/domains', domainRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Test route
 app.get('/', (req, res) => {

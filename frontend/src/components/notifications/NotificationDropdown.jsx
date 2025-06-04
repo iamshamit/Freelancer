@@ -15,7 +15,7 @@ const NotificationDropdown = () => {
   // Fetch notifications
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => api.notification.getAll().then(res => res.data),
+    queryFn: () => api.notification.getAll(),
     staleTime: 60 * 1000, // 1 minute
   });
 
@@ -24,7 +24,7 @@ const NotificationDropdown = () => {
   // Fetch unread count
   const { data: unreadCount } = useQuery({
     queryKey: ['notificationsUnreadCount'],
-    queryFn: () => api.notification.getUnreadCount().then(res => res.data.count),
+    queryFn: () => api.notification.getUnreadCount().then(res => res.count),
     staleTime: 60 * 1000, // 1 minute
     refetchInterval: 60 * 1000, // Refetch every minute
   });

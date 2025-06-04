@@ -1,6 +1,8 @@
 // backend/routes/jobRoutes.js
 const express = require('express');
 const router = express.Router();
+const milestoneRoutes = require('./milestoneRoutes');
+const { getEscrowBalance } = require('../controllers/paymentController');
 const {
   createJob,
   getJobs,
@@ -25,5 +27,11 @@ router.post('/:id/apply', protect, freelancer, applyForJob);
 router.put('/:id/select/:freelancerId', protect, employer, selectFreelancer);
 router.put('/:id/milestone', protect, employer, updateMilestone);
 router.post('/:id/rate', protect, employer, rateFreelancer);
+
+// Milestone routes
+router.use('/:jobId/milestones', milestoneRoutes);
+
+// Escrow route
+router.get('/:jobId/escrow', protect, getEscrowBalance);
 
 module.exports = router;

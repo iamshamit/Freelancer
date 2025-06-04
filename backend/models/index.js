@@ -7,6 +7,7 @@ const Notification = require('./Notification');
 const Admin = require('./Admin');
 const Escrow = require('./Escrow');
 const Domain = require('./Domain');
+const Milestone = require('./Milestone');
 
 module.exports = {
   User,
@@ -16,5 +17,6 @@ module.exports = {
   Notification,
   Admin,
   Escrow,
-  Domain
+  Domain,
+  Milestone
 };

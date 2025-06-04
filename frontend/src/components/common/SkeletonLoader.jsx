@@ -30,25 +30,136 @@ const SkeletonLoader = ({ type = 'card', count = 1 }) => {
             <div className="h-4 bg-[#2B3543] rounded w-3/4"></div>
           </div>
         );
-      case 'chat':
-        return (
-          <div className="bg-[#1C2531] rounded-lg shadow p-6 animate-pulse">
-            <div className="flex justify-start mb-4">
-              <div className="rounded-full bg-[#2B3543] h-8 w-8"></div>
-              <div className="ml-2 bg-[#2B3543] rounded-lg p-3 w-2/3">
-                <div className="h-3 bg-[#3A4758] rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-[#3A4758] rounded w-1/2"></div>
+        case 'chatbox':
+          return (
+            <div className="flex flex-col bg-gray-900 h-full w-full animate-pulse">
+              {/* Chat Header Skeleton */}
+              <div className="bg-gray-800 border-b border-gray-700 p-4 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-full bg-gray-700"></div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-600 rounded-full border-2 border-gray-800"></div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-700 rounded w-32 mb-2"></div>
+                      <div className="flex items-center space-x-2">
+                        <div className="h-3 bg-gray-600 rounded w-24"></div>
+                        <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                        <div className="h-3 bg-gray-600 rounded w-16"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-9 h-9 bg-gray-700 rounded-lg"></div>
+                    <div className="w-9 h-9 bg-gray-700 rounded-lg"></div>
+                    <div className="w-9 h-9 bg-gray-700 rounded-lg"></div>
+                    <div className="w-9 h-9 bg-gray-700 rounded-lg"></div>
+                  </div>
+                </div>
+              </div>
+        
+              {/* Messages Area Skeleton */}
+              <div className="flex-1 bg-gray-900 p-4 md:p-6 lg:p-8 overflow-hidden">
+                {/* Date Separator */}
+                <div className="flex items-center justify-center my-6">
+                  <div className="bg-gray-800 border border-gray-700 px-4 py-1.5 rounded-full">
+                    <div className="h-3 bg-gray-600 rounded w-12"></div>
+                  </div>
+                </div>
+        
+                {/* Message Bubbles */}
+                <div className="space-y-4">
+                  {/* Received Message */}
+                  <div className="flex justify-start">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                      <div className="bg-gray-800 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-gray-600 rounded w-full mb-2"></div>
+                        <div className="h-3 bg-gray-600 rounded w-3/4"></div>
+                      </div>
+                    </div>
+                  </div>
+        
+                  {/* Sent Message */}
+                  <div className="flex justify-end">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="bg-orange-500 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-orange-400 rounded w-full mb-2"></div>
+                        <div className="h-3 bg-orange-400 rounded w-2/3"></div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                    </div>
+                  </div>
+        
+                  {/* Another Received Message */}
+                  <div className="flex justify-start">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                      <div className="bg-gray-800 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-gray-600 rounded w-4/5 mb-2"></div>
+                        <div className="h-3 bg-gray-600 rounded w-full mb-2"></div>
+                        <div className="h-3 bg-gray-600 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
+        
+                  {/* Another Sent Message */}
+                  <div className="flex justify-end">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="bg-orange-500 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-orange-400 rounded w-3/4"></div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                    </div>
+                  </div>
+        
+                  {/* More messages to fill space */}
+                  <div className="flex justify-start">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                      <div className="bg-gray-800 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-gray-600 rounded w-2/3"></div>
+                      </div>
+                    </div>
+                  </div>
+        
+                  <div className="flex justify-end">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="bg-orange-500 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-orange-400 rounded w-full mb-2"></div>
+                        <div className="h-3 bg-orange-400 rounded w-4/5"></div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                    </div>
+                  </div>
+                </div>
+                {/* Message Bubbles - Second Block (could be a loop for more messages) */}
+                <div className="space-y-4">
+                  {/* Received Message */}
+                  <div className="flex justify-start">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                      <div className="bg-gray-800 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-gray-600 rounded w-full mb-2"></div>
+                        <div className="h-3 bg-gray-600 rounded w-3/4"></div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* More messages to fill space */}
+                  <div className="flex justify-end">
+                    <div className="flex items-start space-x-2 max-w-xs lg:max-w-md">
+                      <div className="bg-orange-500 rounded-lg p-3 flex-1">
+                        <div className="h-3 bg-orange-400 rounded w-full mb-2"></div>
+                        <div className="h-3 bg-orange-400 rounded w-4/5"></div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex justify-end mb-4">
-              <div className="mr-2 bg-[#2B3543] rounded-lg p-3 w-2/3">
-                <div className="h-3 bg-[#3A4758] rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-[#3A4758] rounded w-1/2"></div>
-              </div>
-              <div className="rounded-full bg-[#2B3543] h-8 w-8"></div>
-            </div>
-          </div>
-        );
+          );
       case 'chatList':
         return (
           <div className="flex items-start gap-4 p-4 bg-[#1C2531] rounded-lg shadow animate-pulse">

@@ -6,7 +6,7 @@ import {
   Menu, X, Home, Briefcase, MessageSquare, Bell, User, 
   Settings, LogOut, Moon, Sun, ChevronDown, Search,
   ChevronLeft, ChevronRight, Plus,
-  FileText
+  FileText, DollarSign
 } from 'lucide-react';
 import { ErrorBoundary } from 'react-error-boundary';
 import AuthContext from '../../context/AuthContext';
@@ -67,13 +67,18 @@ const DashboardLayout = ({ children }) => {
       { 
         name: 'Messages', 
         icon: <MessageSquare className="w-5 h-5" />, 
-        path: '/messages' 
+        path: '/chat' 
       },
       { 
         name: 'Profile', 
         icon: <User className="w-5 h-5" />, 
         path: '/profile' 
       },
+      {
+        name: 'Payment History',
+        icon: <DollarSign className="w-5 h-5" />,
+        path: '/payments/history',
+      }
     ];
 
     const freelancerItems = [

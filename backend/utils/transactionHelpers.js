@@ -30,6 +30,28 @@ const getUserTransactions = async (userId) => {
   }
 };
 
+const createMilestoneTransaction = async (jobId, escrowId, freelancerId, amount, milestoneId, percentage) => {
+  try {
+    const transaction = await Transaction.create({
+      job: jobId,
+      amount,
+      type: 'release',
+      from: escrowId,
+      fromModel: 'Escrow',
+      to: freelancerId,
+      toModel: 'User',
+      percentage,
+      status: 'completed',
+      milestone: milestoneId
+    });
+
+    return transaction;
+  } catch (error) {
+    console.error('Error creating milestone transaction:', error);
+    throw error;
+  }
+};
+
 // Get all transactions for a specific job
 const getJobTransactions = async (jobId) => {
   try {
@@ -169,5 +191,6 @@ module.exports = {
   createEscrowDeposit,
   createEscrowRelease,
   createEscrowRefund,
-  getTransactionSummary
+  getTransactionSummary,
+  createMilestoneTransaction
 };

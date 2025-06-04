@@ -20,7 +20,10 @@ const notificationSchema = new mongoose.Schema({
       'payment_released', 
       'job_completed', 
       'new_message',
-      'new_rating'
+      'new_rating',
+      'milestones_created',
+      'milestone_approval_requested',
+      'milestone_approved'
     ],
     required: true
   },

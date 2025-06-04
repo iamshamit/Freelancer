@@ -1,7 +1,8 @@
-// frontend/src/App.jsx (updated)
+// frontend/src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
+import { ChatProvider } from "./context/ChatContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import PublicRoute from "./components/auth/PublicRoute";
 
@@ -21,191 +22,213 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import JobListingPage from "./pages/jobs/JobListingPage";
 import JobDetailPage from "./pages/jobs/JobDetailsPage";
 import EmployerJobPage from "./pages/employer/EmployerJobsPage";
+import PostJobPage from "./pages/jobs/PostJobPage";
 
 // Applicant Pages
 import ApplicantReviewPage from "./pages/applicants/ApplicantReviewPage";
 import ApplicationsPage from "./pages/applicants/ApplicationsPage";
 
-// Chat Pages
+// Chat Pages (renamed from messages to chat)
 import ChatPage from "./pages/chat/ChatPage";
 import ArchivedChatsPage from "./pages/chat/ArchivedChatsPage";
-import { ChatProvider } from './context/ChatContext';
 
-// Post Job Page
-import PostJobPage from "./pages/jobs/PostJobPage"; 
+// Milestone Pages
+import MilestonePage from "./pages/milestones/MilestonePage";
+import PaymentHistoryPage from "./pages/milestones/PaymentHistoryPage";
 
-// Placeholder for other pages
+// Placeholder for admin
 const AdminDashboard = () => <div>Admin Dashboard</div>;
 
 function App({ darkMode, setDarkMode }) {
   return (
     <Router>
       <AuthProvider>
-      <ChatProvider>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 5000,
-            style: {
-              background: "#fff",
-              color: "#333",
-            },
-            success: {
+        <ChatProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 5000,
               style: {
-                border: "1px solid #0FAA4F",
+                background: "#fff",
+                color: "#333",
               },
-            },
-            error: {
-              style: {
-                border: "1px solid #964734",
+              success: {
+                style: {
+                  border: "1px solid #0FAA4F",
+                },
               },
-            },
-          }}
-        />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <LoginPage darkMode={darkMode} setDarkMode={setDarkMode} />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <RegisterPage />
-              </PublicRoute>
-            }
+              error: {
+                style: {
+                  border: "1px solid #964734",
+                },
+              },
+            }}
           />
 
-          {/* Freelancer Routes */}
-          <Route
-            path="/freelancer/dashboard"
-            element={
-              <PrivateRoute role="freelancer">
-                <FreelancerDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/jobs"
-            element={
-              <PrivateRoute role="freelancer">
-                <JobListingPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/applications"
-            element={
-              <PrivateRoute role="freelancer">
-                <ApplicationsPage />
-              </PrivateRoute>
-            }
-          />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <LoginPage darkMode={darkMode} setDarkMode={setDarkMode} />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <RegisterPage />
+                </PublicRoute>
+              }
+            />
 
-          {/* Employer Routes */}
-          <Route
-            path="/employer/dashboard"
-            element={
-              <PrivateRoute role="employer">
-                <EmployerDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="employer/post-job"
-            element={
-              <PrivateRoute role="employer">
-                <PostJobPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="employer/jobs"
-            element={
-              <PrivateRoute role="employer">
-                <EmployerJobPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="employer/jobs/:jobId/applicants"
-            element={
-              <PrivateRoute role="employer">
-                <ApplicantReviewPage />
-              </PrivateRoute>
-            }
-          />
+            {/* Freelancer Routes */}
+            <Route
+              path="/freelancer/dashboard"
+              element={
+                <PrivateRoute role="freelancer">
+                  <FreelancerDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/jobs"
+              element={
+                <PrivateRoute role="freelancer">
+                  <JobListingPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/applications"
+              element={
+                <PrivateRoute role="freelancer">
+                  <ApplicationsPage />
+                </PrivateRoute>
+              }
+            />
 
-          {/* Shared Routes */}
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <ProfilePage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/profile/:id"
-            element={
-              <PrivateRoute>
-                <ProfilePage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/messages"
-            element={
-              <PrivateRoute>
-                <ChatPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/messages/archived"
-            element={
-              <PrivateRoute>
-                <ArchivedChatsPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/job/:id"
-            element={
-              <PrivateRoute>
-                <JobDetailPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/chat/:id"
-            element={
-              <PrivateRoute>
-                <ChatPage />
-              </PrivateRoute>
-            }
-          />
+            {/* Employer Routes */}
+            <Route
+              path="/employer/dashboard"
+              element={
+                <PrivateRoute role="employer">
+                  <EmployerDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/employer/post-job"
+              element={
+                <PrivateRoute role="employer">
+                  <PostJobPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/employer/jobs"
+              element={
+                <PrivateRoute role="employer">
+                  <EmployerJobPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/employer/jobs/:jobId/applicants"
+              element={
+                <PrivateRoute role="employer">
+                  <ApplicantReviewPage />
+                </PrivateRoute>
+              }
+            />
 
-          {/* Admin Routes */}
-          <Route
-            path="/admin/dashboard"
-            element={
-              <PrivateRoute role="admin">
-                <AdminDashboard />
-              </PrivateRoute>
-            }
-          />
-        </Routes>
-      </ChatProvider>
+            {/* Shared Routes */}
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <ProfilePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile/:id"
+              element={
+                <PrivateRoute>
+                  <ProfilePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/job/:id"
+              element={
+                <PrivateRoute>
+                  <JobDetailPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* 🆕 Chat Routes (standardized) */}
+            <Route
+              path="/chat"
+              element={
+                <PrivateRoute>
+                  <ChatPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/chat/:id"
+              element={
+                <PrivateRoute>
+                  <ChatPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/chat/archived"
+              element={
+                <PrivateRoute>
+                  <ArchivedChatsPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Milestones */}
+            <Route
+              path="/job/:jobId/milestones"
+              element={
+                <PrivateRoute>
+                  <MilestonePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/payments/history"
+              element={
+                <PrivateRoute>
+                  <PaymentHistoryPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Admin */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <PrivateRoute role="admin">
+                  <AdminDashboard />
+                </PrivateRoute>
+              }
+            />
+          </Routes>
+        </ChatProvider>
       </AuthProvider>
     </Router>
   );
 }
 
-export default App
+export default App;

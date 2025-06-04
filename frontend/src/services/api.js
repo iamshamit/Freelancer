@@ -48,7 +48,7 @@ const api = {
     getProfile: () => axiosInstance.get('/users/profile').then(res => res.data),
     updateProfile: (userData) => axiosInstance.put('/users/profile', userData),
     uploadProfilePicture: (imageData) => axiosInstance.post('/users/profile/picture', { image: imageData }),
-    getById: (id) => axiosInstance.get(`/users/${id}`)
+    getById: (id) => axiosInstance.get(`/users/${id}`).then(res => res.data)
   },
   
   // Job endpoints
@@ -79,8 +79,8 @@ const api = {
   notification: {
     getAll: () => axiosInstance.get('/notifications').then(res => res.data),
     getUnreadCount: () => axiosInstance.get('/notifications/unread-count').then(res => res.data),
-    markAsRead: (id) => axiosInstance.put(`/notifications/${id}`).then(res => res.data),
-    markAllAsRead: () => axiosInstance.put('/notifications/read-all').then(res => res.data)
+    markAsRead: (id) => axiosInstance.put(`/notifications/${id}`),
+    markAllAsRead: () => axiosInstance.put('/notifications/read-all')
   },
 
   // Domain endpoints
@@ -89,8 +89,28 @@ const api = {
   getById: (id) => axiosInstance.get(`/domains/${id}`).then(res => res.data),
   create: (domainData) => axiosInstance.post('/domains', domainData).then(res => res.data),
   update: (id, domainData) => axiosInstance.put(`/domains/${id}`, domainData).then(res => res.data)
-}
+  },
+  
+  // Milestone endpoints
+  milestone: {
+    create: (jobId, milestoneData) => axiosInstance.post(`/jobs/${jobId}/milestones`, { milestones: milestoneData }).then(res => res.data),
+    update: (jobId, milestoneId, data) => axiosInstance.put(`/jobs/${jobId}/milestones/${milestoneId}`, data).then(res => res.data),
+    delete: (jobId, milestoneId) => axiosInstance.delete(`/jobs/${jobId}/milestones/${milestoneId}`).then(res => res.data),
+    requestApproval: (jobId, milestoneId) => axiosInstance.post(`/jobs/${jobId}/milestones/${milestoneId}/request-approval`).then(res => res.data),
+    approve: (jobId, milestoneId, feedback) => axiosInstance.post(`/jobs/${jobId}/milestones/${milestoneId}/approve`, { feedback }).then(res => res.data),
+    reject: (jobId, milestoneId, reason) => axiosInstance.post(`/jobs/${jobId}/milestones/${milestoneId}/reject`, { reason }).then(res => res.data),
+    getAll: (jobId) => axiosInstance.get(`/jobs/${jobId}/milestones`).then(res => res.data),
+    getById: (jobId, milestoneId) => axiosInstance.get(`/jobs/${jobId}/milestones/${milestoneId}`).then(res => res.data)
+  },
 
+  // Payment endpoints
+  payment: {
+    getHistory: (params) => axiosInstance.get('/payments/history', { params }).then(res => res.data),
+    getReceipt: (paymentId) => axiosInstance.get(`/payments/${paymentId}/receipt`).then(res => res.data),
+    getEscrowBalance: (jobId) => axiosInstance.get(`/jobs/${jobId}/escrow`).then(res => res.data),
+    getTransactionDetails: (transactionId) => axiosInstance.get(`/payments/transaction/${transactionId}`).then(res => res.data),
+    exportHistory: (format = 'csv') => axiosInstance.get(`/payments/export`, { params: { format },responseType: 'blob'}).then(res => res.data)
+  }
 };
 
 export default api;

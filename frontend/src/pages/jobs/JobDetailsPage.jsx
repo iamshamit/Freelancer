@@ -1,8 +1,9 @@
 // src/pages/jobs/JobDetailPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import AuthContext from "../../context/AuthContext";
 import {
   Briefcase,
   DollarSign,
@@ -30,6 +31,7 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
   const queryClient = useQueryClient();
   const [showApplySuccess, setShowApplySuccess] = useState(false);
   const [domainName, setDomainName] = useState("");
+  const { user } = useContext(AuthContext);
 
   // Fetch job details
   const {
@@ -121,7 +123,7 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
         {/* Back navigation - Moved to the top */}
         <div className="mb-6">
           <Link
-            to="/jobs"
+            to={`${user?.role === 'employer' ? '/employer' : ''}/jobs`}
             className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
           >
             <ChevronLeft className="h-5 w-5 mr-1" />

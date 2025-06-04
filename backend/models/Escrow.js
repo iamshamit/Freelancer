@@ -30,6 +30,10 @@ const escrowSchema = new mongoose.Schema({
     default: 'pending'
   },
   milestones: [{
+    milestone: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Milestone'
+    },
     percentage: {
       type: Number,
       required: true

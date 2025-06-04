@@ -16,7 +16,8 @@ import {
   Clock,
   User,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Target // Added for milestones
 } from 'lucide-react';
 import { format } from 'date-fns';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -61,7 +62,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
   const messageMutation = useMutation({
     mutationFn: () => api.chat.create(jobId),
     onSuccess: (data) => {
-      navigate(`/messages/${data?.conversationId || ''}`);
+      navigate(`/chat/${data?._id || ''}`);
     },
   });
   
@@ -180,7 +181,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
         <div className="mb-6">
           <Link 
             to="/employer/jobs"
-            className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
+            className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors duration-200"
           >
             <ChevronLeft className="h-5 w-5 mr-1" />
             <span>Back to Jobs</span>
@@ -188,7 +189,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
         </div>
         
         {/* Job header */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300">
           <div className="p-6">
             <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
               <div>
@@ -210,7 +211,11 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                 </div>
                 
                 <Link to={`/job/${jobId}`}>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200 transform hover:scale-105"
+                  >
                     View Job Details
                   </Button>
                 </Link>
@@ -220,7 +225,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
         </div>
         
         {/* Applicant filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6 border border-gray-100 dark:border-gray-700">
           <div className="p-4 flex flex-wrap gap-4 items-center">
             <div className="flex items-center">
               <Filter className="h-5 w-5 text-gray-400 mr-2" />
@@ -228,7 +233,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50"
+                className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50 transition-all duration-200"
               >
                 <option value="all">All Applicants</option>
                 <option value="pending">Pending</option>
@@ -241,7 +246,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50"
+                className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50 transition-all duration-200"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -268,7 +273,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Applicant list */}
             <div className="md:col-span-1">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden h-full">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden h-full border border-gray-100 dark:border-gray-700">
                 <div className="p-4">
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                     Applicants ({filteredApplicants.length})
@@ -279,10 +284,10 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                       <div
                         key={applicant._id}
                         onClick={() => handleSelectApplicant(applicant)}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 transform ${
                           selectedApplicant?._id === applicant._id
-                            ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                            : 'bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 shadow-md'
+                            : 'bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-sm'
                         } border ${
                           selectedApplicant?._id === applicant._id
                             ? 'border-orange-200 dark:border-orange-800'
@@ -298,7 +303,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-orange-500 text-white">
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-orange-400 to-orange-600 text-white">
                                 <User className="h-5 w-5" />
                               </div>
                             )}
@@ -308,12 +313,23 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                               <h3 className="font-medium text-gray-900 dark:text-white truncate">
                                 {applicant.freelancer?.name || 'Anonymous Freelancer'}
                               </h3>
-                              <Badge
-                                variant="default"
-                                className="ml-2 text-xs"
-                              >
-                                Pending
-                              </Badge>
+                              {
+                                applicant.freelancer?._id == job.freelancer._id ? (
+                                  <Badge
+                                    variant="success"
+                                    className="ml-2 text-xs shadow-sm"
+                                  >
+                                    Assigned
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="warning"
+                                    className="ml-2 text-xs shadow-sm"
+                                  >
+                                    Pending
+                                  </Badge>
+                                )
+                              }
                             </div>
                             
                             <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -325,7 +341,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                               )}
                               <div className="flex items-center">
                                 <Clock className="h-3.5 w-3.5 mr-1" />
-                                                                <span>{format(new Date(applicant.appliedAt), 'MMM d')}</span>
+                                <span>{format(new Date(applicant.appliedAt), 'MMM d')}</span>
                               </div>
                             </div>
                           </div>
@@ -345,7 +361,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                 >
                   <div className="p-6">
                     {/* Applicant header */}
@@ -359,7 +375,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-orange-500 text-white">
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-orange-400 to-orange-600 text-white">
                               <User className="h-8 w-8" />
                             </div>
                           )}
@@ -385,9 +401,23 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                 </span>
                               </div>
                             )}
-                            <Badge variant="default">
-                              Pending
-                            </Badge>
+                            {
+                              selectedApplicant.freelancer?._id == job.freelancer._id ? (
+                                <Badge
+                                  variant="success"
+                                  className="ml-2 text-xs shadow-sm"
+                                >
+                                  Assigned
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="warning"
+                                  className="ml-2 text-xs shadow-sm"
+                                >
+                                  Pending
+                                </Badge>
+                              )
+                            }
                           </div>
                         </div>
                       </div>
@@ -398,19 +428,32 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                               onClick={() => handleAcceptApplicant(selectedApplicant.freelancer)}
                               isLoading={acceptMutation.isPending}
                               disabled={acceptMutation.isPending}
-                              variant="success"
-                              className="flex items-center"
+                              className="flex items-center bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
                               Accept
                             </Button>
                           )}
+                        
+                        {/* Show milestone button if applicant is assigned */}
+                        {selectedApplicant.freelancer?._id == job.freelancer._id && (
+                          <Link to={`/job/${jobId}/milestones`}>
+                            <Button
+                              variant="outline"
+                              className="flex items-center border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200 transform hover:scale-105"
+                            >
+                              <Target className="h-4 w-4 mr-2" />
+                              Milestones
+                            </Button>
+                          </Link>
+                        )}
+                        
                         <Button
                           onClick={handleMessageApplicant}
                           isLoading={messageMutation.isPending}
                           disabled={messageMutation.isPending}
                           variant="outline"
-                          className="flex items-center"
+                          className="flex items-center border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200 transform hover:scale-105"
                         >
                           <MessageSquare className="h-4 w-4 mr-2" />
                           Message
@@ -423,7 +466,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
                         Application Details
                       </h3>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-4">
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-4 border border-gray-100 dark:border-gray-600">
                         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
                           <Calendar className="h-4 w-4 mr-2" />
                           <span>Applied on {format(new Date(selectedApplicant.appliedAt), 'MMMM d, yyyy')}</span>
@@ -446,7 +489,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                           <h4 className="font-medium text-gray-900 dark:text-white mb-2">Skills</h4>
                           <div className="flex flex-wrap gap-2">
                             {selectedApplicant.freelancer.skills.map((skill, index) => (
-                              <Badge key={index} variant="secondary">
+                              <Badge key={index} variant="secondary" className="shadow-sm">
                                 {skill}
                               </Badge>
                             ))}
@@ -470,7 +513,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                           <h4 className="font-medium text-gray-900 dark:text-white mb-2">Experience</h4>
                           <div className="space-y-3">
                             {selectedApplicant.freelancer.experience.map((exp, index) => (
-                              <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                              <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-100 dark:border-gray-600 hover:shadow-sm transition-all duration-200">
                                 <h5 className="font-medium text-gray-900 dark:text-white">
                                   {exp.title} at {exp.company}
                                 </h5>
@@ -492,7 +535,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                           <h4 className="font-medium text-gray-900 dark:text-white mb-2">Reviews</h4>
                           <div className="space-y-3">
                             {selectedApplicant.freelancer.ratings.slice(0, 3).map((review, index) => (
-                              <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                              <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 border border-gray-100 dark:border-gray-600 hover:shadow-sm transition-all duration-200">
                                 <div className="flex items-center justify-between mb-1">
                                   <h5 className="font-medium text-gray-900 dark:text-white">
                                     {review.job?.title || 'Job'}
@@ -518,7 +561,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                             {selectedApplicant.freelancer.ratings.length > 3 && (
                               <Link 
                                 to={`/freelancer/${selectedApplicant.freelancer._id}`}
-                                className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 font-medium"
+                                className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 font-medium transition-colors duration-200"
                               >
                                 View all {selectedApplicant.freelancer.ratings.length} reviews
                               </Link>
@@ -530,7 +573,10 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                       {/* View full profile button */}
                       <div className="mt-6">
                         <Link to={`/profile/${selectedApplicant.freelancer._id}`}>
-                          <Button variant="outline" className="w-full">
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200 transform hover:scale-102"
+                          >
                             View Full Profile
                           </Button>
                         </Link>
@@ -539,7 +585,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                   </div>
                 </motion.div>
               ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden h-full flex items-center justify-center p-8">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden h-full flex items-center justify-center p-8 border border-gray-100 dark:border-gray-700">
                   <div className="text-center">
                     <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -559,4 +605,4 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
   );
 };
 
-export default ApplicantReviewPage; 
+export default ApplicantReviewPage;
