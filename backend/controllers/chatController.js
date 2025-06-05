@@ -1,5 +1,6 @@
 // backend/controllers/chatController.js
 const { Chat, Job, Notification } = require('../models');
+const { createAndEmitNotification } = require('../utils/notificationHelper');
 
 // @desc    Create a new chat
 // @route   POST /api/chats
@@ -92,7 +93,8 @@ const sendMessage = async (req, res) => {
       return res.status(400).json({ message: 'Message content is required' });
     }
 
-    const chat = await Chat.findById(req.params.id);
+    const chat = await Chat.findById(req.params.id)
+      .populate('job', 'title');
 
     if (!chat) {
       return res.status(404).json({ message: 'Chat not found' });
@@ -123,14 +125,28 @@ const sendMessage = async (req, res) => {
       ? chat.freelancer
       : chat.employer;
 
-    // Create notification
-    await Notification.create({
+    // Create and emit notification using the helper
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient,
       sender: req.user._id,
       type: 'new_message',
+      title: 'New Message',
+      message: `You have a new message in "${chat.job?.title || 'your project'}"`,
       chat: chat._id,
-      job: chat.job,
-      message: 'You have a new message'
+      job: chat.job?._id,
+      link: `/chats/${chat._id}`,
+      actions: [
+        {
+          label: 'View Message',
+          link: `/chats/${chat._id}`,
+          primary: true
+        }
+      ],
+      metadata: {
+        messagePreview: content.trim().substring(0, 100),
+        senderName: req.user.name
+      }
     });
 
     // Populate sender info for the response

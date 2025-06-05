@@ -68,6 +68,52 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  notificationPreferences: {
+    email: {
+      enabled: { type: Boolean, default: true },
+      frequency: { 
+        type: String, 
+        enum: ['immediate', 'daily', 'weekly'], 
+        default: 'immediate' 
+      },
+      types: {
+        new_application: { type: Boolean, default: true },
+        job_assigned: { type: Boolean, default: true },
+        milestone_completed: { type: Boolean, default: true },
+        payment_released: { type: Boolean, default: true },
+        new_message: { type: Boolean, default: true },
+        new_rating: { type: Boolean, default: true }
+      }
+    },
+    push: {
+      enabled: { type: Boolean, default: true },
+      types: {
+        new_application: { type: Boolean, default: true },
+        job_assigned: { type: Boolean, default: true },
+        milestone_completed: { type: Boolean, default: true },
+        payment_released: { type: Boolean, default: true },
+        new_message: { type: Boolean, default: true },
+        new_rating: { type: Boolean, default: false }
+      }
+    },
+    inApp: {
+      enabled: { type: Boolean, default: true },
+      sound: { type: Boolean, default: true },
+      types: {
+        new_application: { type: Boolean, default: true },
+        job_assigned: { type: Boolean, default: true },
+        milestone_completed: { type: Boolean, default: true },
+        payment_released: { type: Boolean, default: true },
+        new_message: { type: Boolean, default: true },
+        new_rating: { type: Boolean, default: true }
+      }
+    },
+    quietHours: {
+      enabled: { type: Boolean, default: false },
+      start: { type: String, default: '22:00' },
+      end: { type: String, default: '08:00' }
+    }
   }
 });
 

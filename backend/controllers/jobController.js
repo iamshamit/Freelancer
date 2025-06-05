@@ -1,6 +1,7 @@
 // backend/controllers/jobController.js
 const { Job, User, Transaction, Notification, Escrow } = require("../models");
 const { createEscrowDeposit, createEscrowRelease } = require("../utils/transactionHelpers");
+const { createAndEmitNotification } = require("../utils/notificationHelper");
 
 // @desc    Create a new job
 // @route   POST /api/jobs
@@ -183,13 +184,33 @@ const applyForJob = async (req, res) => {
     job.applicants.push({ freelancer: req.user._id });
     await job.save();
 
-    // Create notification for employer
-    await Notification.create({
+    // Create and emit notification for employer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: job.employer,
       sender: req.user._id,
       type: "new_application",
-      job: job._id,
+      title: "New Job Application",
       message: `${req.user.name} has applied for your job: ${job.title}`,
+      job: job._id,
+      link: `/jobs/${job._id}/applications`,
+      actions: [
+        {
+          label: 'View Application',
+          link: `/jobs/${job._id}/applications`,
+          primary: true
+        },
+        {
+          label: 'View Job',
+          link: `/jobs/${job._id}`,
+          primary: false
+        }
+      ],
+      metadata: {
+        applicantName: req.user.name,
+        jobTitle: job.title,
+        totalApplications: job.applicants.length
+      }
     });
 
     res.status(201).json({ message: "Application submitted successfully" });
@@ -244,13 +265,34 @@ const selectFreelancer = async (req, res) => {
       await escrow.save();
     }
 
-    // Create notification for freelancer
-    await Notification.create({
+    // Create and emit notification for freelancer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: freelancerId,
       sender: req.user._id,
       type: "job_assigned",
+      title: "Job Assignment",
+      message: `Congratulations! You have been selected for the job: ${job.title}`,
       job: job._id,
-      message: `You have been selected for the job: ${job.title}`,
+      link: `/jobs/${job._id}`,
+      actions: [
+        {
+          label: 'View Job Details',
+          link: `/jobs/${job._id}`,
+          primary: true
+        },
+        {
+          label: 'Start Chat',
+          link: `/chats/job/${job._id}`,
+          primary: false
+        }
+      ],
+      metadata: {
+        jobTitle: job.title,
+        employerName: req.user.name,
+        budget: job.budget,
+        deadline: job.deadline
+      }
     });
 
     res.json({ message: "Freelancer selected successfully" });
@@ -334,13 +376,35 @@ const updateMilestone = async (req, res) => {
     // Create transaction record for releasing payment from escrow to freelancer
     await createEscrowRelease(job._id, escrow._id, job.freelancer, paymentAmount, percentage);
 
-    // Create notification for freelancer
-    await Notification.create({
+    // Create and emit notification for freelancer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: job.freelancer,
       sender: req.user._id,
       type: "payment_released",
+      title: percentage === 100 ? "Final Payment Released" : "Milestone Payment Released",
+      message: `${percentage}% milestone approved and payment of $${paymentAmount.toFixed(2)} released for: ${job.title}`,
       job: job._id,
-      message: `${percentage}% milestone approved and payment released for: ${job.title}`,
+      link: `/jobs/${job._id}`,
+      actions: [
+        {
+          label: 'View Job',
+          link: `/jobs/${job._id}`,
+          primary: true
+        },
+        {
+          label: 'View Transactions',
+          link: `/transactions`,
+          primary: false
+        }
+      ],
+      metadata: {
+        milestonePercentage: percentage,
+        paymentAmount: paymentAmount,
+        totalReleased: job.paymentReleased,
+        jobTitle: job.title,
+        isCompleted: percentage === 100
+      }
     });
 
     res.json({
@@ -462,13 +526,39 @@ const rateFreelancer = async (req, res) => {
 
     await freelancer.save();
 
-    // Create notification for freelancer
-    await Notification.create({
+    // Update job to mark as rated by employer
+    job.isRatedByEmployer = true;
+    await job.save();
+
+    // Create and emit notification for freelancer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: freelancer._id,
       sender: req.user._id,
       type: "new_rating",
+      title: "New Review Received",
+      message: `You received a ${rating}-star rating from ${req.user.name} for: ${job.title}`,
       job: job._id,
-      message: `You received a ${rating}-star rating for: ${job.title}`,
+      link: `/profile/reviews`,
+      actions: [
+        {
+          label: 'View Review',
+          link: `/profile/reviews`,
+          primary: true
+        },
+        {
+          label: 'View Job',
+          link: `/jobs/${job._id}`,
+          primary: false
+        }
+      ],
+      metadata: {
+        rating: rating,
+        review: review,
+        reviewerName: req.user.name,
+        jobTitle: job.title,
+        newAverageRating: freelancer.averageRating
+      }
     });
 
     res.json({ message: "Rating submitted successfully" });
@@ -476,7 +566,7 @@ const rateFreelancer = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
-};
+}; 
 
 module.exports = {
   createJob,

@@ -65,6 +65,10 @@ const jobSchema = new mongoose.Schema({
   completedAt: {
     type: Date,
   },
+  isRatedByEmployer: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Job = mongoose.model("Job", jobSchema);

@@ -36,6 +36,12 @@ import ArchivedChatsPage from "./pages/chat/ArchivedChatsPage";
 import MilestonePage from "./pages/milestones/MilestonePage";
 import PaymentHistoryPage from "./pages/milestones/PaymentHistoryPage";
 
+// Notifications
+import NotificationPage from "./pages/notifications/NotificationPage";
+
+// Ratings Pages
+import RateFreelancerPage from "./pages/ratings/RateFreelancerPage";
+
 // Placeholder for admin
 const AdminDashboard = () => <div>Admin Dashboard</div>;
 
@@ -144,6 +150,14 @@ function App({ darkMode, setDarkMode }) {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/job/:jobId/rate-freelancer"
+              element={
+                <PrivateRoute role="employer">
+                  <RateFreelancerPage />
+                </PrivateRoute>
+              }
+            />
 
             {/* Shared Routes */}
             <Route
@@ -170,7 +184,14 @@ function App({ darkMode, setDarkMode }) {
                 </PrivateRoute>
               }
             />
-
+            <Route
+              path="/notifications"
+              element={
+                <PrivateRoute>
+                  <NotificationPage />
+                </PrivateRoute>
+              }
+            />
             {/* 🆕 Chat Routes (standardized) */}
             <Route
               path="/chat"

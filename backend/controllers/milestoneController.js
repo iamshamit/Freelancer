@@ -1,6 +1,7 @@
 // backend/controllers/milestoneController.js
 const { Milestone, Job, Escrow, Transaction, Notification, User } = require('../models');
 const { createEscrowRelease } = require('../utils/transactionHelpers');
+const { createAndEmitNotification } = require('../utils/notificationHelper');
 
 // @desc    Create milestones for a job
 // @route   POST /api/jobs/:jobId/milestones
@@ -64,13 +65,34 @@ const createMilestones = async (req, res) => {
       await escrow.save();
     }
 
-    // Notify freelancer
-    await Notification.create({
+    // Create and emit notification for freelancer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: job.freelancer,
       sender: req.user._id,
       type: 'milestones_created',
+      title: 'Project Milestones Created',
+      message: `Milestones have been created for your project: ${job.title}`,
       job: jobId,
-      message: `Milestones have been created for: ${job.title}`
+      link: `/jobs/${jobId}/milestones`,
+      actions: [
+        {
+          label: 'View Milestones',
+          link: `/jobs/${jobId}/milestones`,
+          primary: true
+        },
+        {
+          label: 'View Job',
+          link: `/jobs/${jobId}`,
+          primary: false
+        }
+      ],
+      metadata: {
+        jobTitle: job.title,
+        totalMilestones: createdMilestones.length,
+        firstMilestone: createdMilestones[0].title,
+        employerName: req.user.name
+      }
     });
 
     res.status(201).json(createdMilestones);
@@ -139,13 +161,35 @@ const requestMilestoneApproval = async (req, res) => {
     milestone.completedAt = Date.now();
     await milestone.save();
 
-    // Notify employer
-    await Notification.create({
+    // Create and emit notification for employer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: job.employer,
       sender: req.user._id,
       type: 'milestone_approval_requested',
+      title: 'Milestone Approval Requested',
+      message: `${req.user.name} has requested approval for milestone: ${milestone.title}`,
       job: jobId,
-      message: `Approval requested for milestone: ${milestone.title}`
+      link: `/jobs/${jobId}/milestones`,
+      actions: [
+        {
+          label: 'Review Milestone',
+          link: `/jobs/${jobId}/milestones/${milestoneId}`,
+          primary: true
+        },
+        {
+          label: 'View All Milestones',
+          link: `/jobs/${jobId}/milestones`,
+          primary: false
+        }
+      ],
+      metadata: {
+        milestoneTitle: milestone.title,
+        milestonePercentage: milestone.percentage,
+        milestoneAmount: milestone.amount,
+        freelancerName: req.user.name,
+        jobTitle: job.title
+      }
     });
 
     res.json({ message: 'Approval requested successfully' });
@@ -197,7 +241,8 @@ const approveMilestone = async (req, res) => {
     job.paymentReleased += milestone.amount;
 
     // Check if job is completed
-    if (approvedPercentage === 100) {
+    const isJobCompleted = approvedPercentage === 100;
+    if (isJobCompleted) {
       job.status = 'completed';
       job.completedAt = Date.now();
       
@@ -221,7 +266,7 @@ const approveMilestone = async (req, res) => {
         escrow.milestones[milestoneIndex].releasedAt = Date.now();
         escrow.releasedAmount += milestone.amount;
         
-        if (approvedPercentage === 100) {
+        if (isJobCompleted) {
           escrow.status = 'completed';
         }
         
@@ -250,13 +295,39 @@ const approveMilestone = async (req, res) => {
       await nextMilestone.save();
     }
 
-    // Notify freelancer
-    await Notification.create({
+    // Create and emit notification for freelancer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: job.freelancer,
       sender: req.user._id,
       type: 'milestone_approved',
+      title: isJobCompleted ? 'Final Milestone Approved!' : 'Milestone Approved',
+      message: `Milestone "${milestone.title}" has been approved and payment of $${milestone.amount.toFixed(2)} has been released.${isJobCompleted ? ' Congratulations on completing the project!' : ''}`,
       job: jobId,
-      message: `Milestone approved: ${milestone.title}. Payment of $${milestone.amount} released.`
+      link: `/jobs/${jobId}`,
+      actions: [
+        {
+          label: isJobCompleted ? 'View Completed Job' : 'Continue Project',
+          link: `/jobs/${jobId}`,
+          primary: true
+        },
+        {
+          label: 'View Transactions',
+          link: `/transactions`,
+          primary: false
+        }
+      ],
+      metadata: {
+        milestoneTitle: milestone.title,
+        milestoneAmount: milestone.amount,
+        milestonePercentage: milestone.percentage,
+        totalProgress: approvedPercentage,
+        isJobCompleted: isJobCompleted,
+        feedback: feedback,
+        employerName: req.user.name,
+        jobTitle: job.title,
+        nextMilestone: nextMilestone ? nextMilestone.title : null
+      }
     });
 
     res.json({ 
@@ -301,13 +372,35 @@ const rejectMilestone = async (req, res) => {
     milestone.rejectionReason = reason;
     await milestone.save();
 
-    // Notify freelancer
-    await Notification.create({
+    // Create and emit notification for freelancer
+    const io = req.app.get('io');
+    await createAndEmitNotification(io, {
       recipient: job.freelancer,
       sender: req.user._id,
       type: 'milestone_rejected',
+      title: 'Milestone Needs Revision',
+      message: `Milestone "${milestone.title}" requires revision. Please review the feedback and resubmit.`,
       job: jobId,
-      message: `Milestone rejected: ${milestone.title}. Reason: ${reason}`
+      link: `/jobs/${jobId}/milestones/${milestoneId}`,
+      actions: [
+        {
+          label: 'View Feedback',
+          link: `/jobs/${jobId}/milestones/${milestoneId}`,
+          primary: true
+        },
+        {
+          label: 'Contact Employer',
+          link: `/chats/job/${jobId}`,
+          primary: false
+        }
+      ],
+      metadata: {
+        milestoneTitle: milestone.title,
+        rejectionReason: reason,
+        employerName: req.user.name,
+        jobTitle: job.title,
+        milestonePercentage: milestone.percentage
+      }
     });
 
     res.json({ message: 'Milestone rejected' });
@@ -362,6 +455,8 @@ const updateMilestone = async (req, res) => {
 // @access  Private/Employer
 const deleteMilestone = async (req, res) => {
   try {
+    const { jobId, milestoneId } = req.params;
+
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });

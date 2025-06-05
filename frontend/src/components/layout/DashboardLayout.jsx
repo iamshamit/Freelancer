@@ -12,6 +12,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import AuthContext from '../../context/AuthContext';
 import ErrorFallback from '../common/ErrorFallback';
 import NotificationDropdown from '../notifications/NotificationDropdown';
+import useRealTimeNotifications from '../../hooks/useRealTimeNotifications';
 
 const DashboardLayout = ({ children }) => {
   const { user, logout } = useContext(AuthContext);
@@ -22,6 +23,7 @@ const DashboardLayout = ({ children }) => {
   });
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { isConnected } = useRealTimeNotifications();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -78,6 +80,11 @@ const DashboardLayout = ({ children }) => {
         name: 'Payment History',
         icon: <DollarSign className="w-5 h-5" />,
         path: '/payments/history',
+      },
+      {
+        name: 'Notifications',
+        icon: <Bell className="w-5 h-5" />,
+        path: '/notifications',
       }
     ];
 

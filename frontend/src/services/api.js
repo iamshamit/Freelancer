@@ -40,23 +40,23 @@ const removeAuthToken = () => {
 const api = {
   setAuthToken,
   removeAuthToken,
-  
+
   // User endpoints
   user: {
-    register: (userData) => axiosInstance.post('/users', userData).then(res => res.data),
+    register: (userData) => axiosInstance.post('/users', userData),
     login: (email, password) => axiosInstance.post('/users/login', { email, password }),
     getProfile: () => axiosInstance.get('/users/profile').then(res => res.data),
     updateProfile: (userData) => axiosInstance.put('/users/profile', userData),
     uploadProfilePicture: (imageData) => axiosInstance.post('/users/profile/picture', { image: imageData }),
     getById: (id) => axiosInstance.get(`/users/${id}`).then(res => res.data)
   },
-  
+
   // Job endpoints
   job: {
     create: (jobData) => axiosInstance.post('/jobs', jobData).then(res => res.data),
     getAll: (params) => axiosInstance.get('/jobs', { params }).then(res => res.data),
     getById: (id) => axiosInstance.get(`/jobs/${id}`).then(res => res.data),
-    apply: (id) => axiosInstance.post(`/jobs/${id}/apply`).then(res => res.data),
+    apply: (id) => axiosInstance.post(`/jobs/${id}/apply`),
     selectFreelancer: (jobId, freelancerId) => axiosInstance.put(`/jobs/${jobId}/select/${freelancerId}`).then(res => res.data),
     updateMilestone: (id, percentage) => axiosInstance.put(`/jobs/${id}/milestone`, { percentage }).then(res => res.data),
     getEmployerJobs: () => axiosInstance.get('/jobs/employer').then(res => res.data),
@@ -64,7 +64,7 @@ const api = {
     rateFreelancer: (id, rating, review) => axiosInstance.post(`/jobs/${id}/rate`, { rating, review }).then(res => res.data),
     getAppliedJobs: () => axiosInstance.get('/jobs/applied').then(res => res.data)
   },
-  
+
   // Chat endpoints
   chat: {
     create: (jobId) => axiosInstance.post('/chats', { jobId }).then(res => res.data),
@@ -74,13 +74,38 @@ const api = {
     sendMessage: (id, content) => axiosInstance.post(`/chats/${id}/messages`, { content }).then(res => res.data),
     archive: (id) => axiosInstance.put(`/chats/${id}/archive`).then(res => res.data)
   },
-  
+
   // Notification endpoints
   notification: {
-    getAll: () => axiosInstance.get('/notifications').then(res => res.data),
+    getAll: (params = {}) => {
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append('page', params.page);
+      if (params.limit) queryParams.append('limit', params.limit);
+      if (params.category && params.category !== 'all') queryParams.append('category', params.category);
+      if (params.status && params.status !== 'all') queryParams.append('status', params.status);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      return axiosInstance.get(`/notifications?${queryParams.toString()}`).then(res => res.data);
+    },
     getUnreadCount: () => axiosInstance.get('/notifications/unread-count').then(res => res.data),
-    markAsRead: (id) => axiosInstance.put(`/notifications/${id}`),
-    markAllAsRead: () => axiosInstance.put('/notifications/read-all')
+    getCategoryCounts: () => axiosInstance.get('/notifications/category-counts').then(res => res.data),
+    markAsRead: (ids) => {
+      if (Array.isArray(ids)) {
+        return axiosInstance.put('/notifications/mark-read-multiple', { ids });
+      }
+      return axiosInstance.put(`/notifications/${ids}`);
+    },
+    markAllAsRead: () => axiosInstance.put('/notifications/read-all'),
+    delete: (id) => axiosInstance.delete(`/notifications/${id}`),
+    deleteMultiple: (ids) => axiosInstance.delete('/notifications/multiple', { data: { ids } }),
+    archiveMultiple: (ids) => axiosInstance.put('/notifications/archive-multiple', { ids }),
+    getPreferences: () => axiosInstance.get('/notifications/preferences').then(res => res.data),
+    updatePreferences: (preferences) => axiosInstance.put('/notifications/preferences', preferences).then(res => res.data),
+    // Real-time subscription
+    subscribe: (userId) => axiosInstance.post('/notifications/subscribe', { userId }),
+    unsubscribe: (userId) => axiosInstance.post('/notifications/unsubscribe', { userId }),
+    // Test notification (for development)
+    sendTest: (type) => axiosInstance.post('/notifications/test', { type }).then(res => res.data)
   },
 
   // Domain endpoints
@@ -90,7 +115,7 @@ const api = {
   create: (domainData) => axiosInstance.post('/domains', domainData).then(res => res.data),
   update: (id, domainData) => axiosInstance.put(`/domains/${id}`, domainData).then(res => res.data)
   },
-  
+
   // Milestone endpoints
   milestone: {
     create: (jobId, milestoneData) => axiosInstance.post(`/jobs/${jobId}/milestones`, { milestones: milestoneData }).then(res => res.data),

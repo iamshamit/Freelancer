@@ -27,6 +27,10 @@ const notificationSchema = new mongoose.Schema({
     ],
     required: true
   },
+  title: {
+    type: String,
+    required: true
+  },
   job: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Job'
@@ -36,15 +40,35 @@ const notificationSchema = new mongoose.Schema({
     ref: 'Chat'
   },
   message: String,
+  link: String,
   read: {
     type: Boolean,
     default: false
+  },
+  archived: {
+    type: Boolean,
+    default: false
+  },
+  actions: [{
+    label: String,
+    link: String,
+    primary: Boolean
+  }],
+  metadata: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+// Index for better query performance
+notificationSchema.index({ recipient: 1, createdAt: -1 });
+notificationSchema.index({ recipient: 1, read: 1 });
+notificationSchema.index({ recipient: 1, type: 1 });
+notificationSchema.index({ recipient: 1, archived: 1 });
 
 const Notification = mongoose.model('Notification', notificationSchema);
 
