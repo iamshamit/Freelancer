@@ -91,7 +91,8 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
 
     // Create a copy of applicants with additional data
     let applicantsData = job.applicants.map((app) => {
-      const isAssigned = job.freelancer && job.freelancer === app.freelancer._id;
+      const isAssigned =
+        job.freelancer && job.freelancer === app.freelancer._id;
       return {
         _id: app._id,
         freelancer: app.freelancer,
@@ -102,7 +103,9 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
 
     // Filter by status
     if (filterStatus !== "all") {
-      applicantsData = applicantsData.filter((app) => app.status === filterStatus);
+      applicantsData = applicantsData.filter(
+        (app) => app.status === filterStatus,
+      );
     }
 
     // Sort applicants
@@ -110,8 +113,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
       switch (sortBy) {
         case "oldest":
           return new Date(a.appliedAt) - new Date(b.appliedAt);
-        case "rating":
-        {
+        case "rating": {
           const ratingA = a.freelancer?.averageRating || 0;
           const ratingB = b.freelancer?.averageRating || 0;
           return ratingB - ratingA;
@@ -220,8 +222,8 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                 </div>
 
                 <Link to={`/job/${jobId}`}>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200"
                   >
@@ -336,10 +338,19 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                   "Anonymous Freelancer"}
                               </h3>
                               <Badge
-                                variant={job.freelancer && job.freelancer._id === applicant.freelancer._id ? "success" : "default"}
+                                variant={
+                                  job.freelancer &&
+                                  job.freelancer._id ===
+                                    applicant.freelancer._id
+                                    ? "success"
+                                    : "default"
+                                }
                                 className="ml-2 text-xs"
                               >
-                                {job.freelancer && job.freelancer._id === applicant.freelancer._id ? "Selected" : "Pending"}
+                                {job.freelancer &&
+                                job.freelancer._id === applicant.freelancer._id
+                                  ? "Selected"
+                                  : "Pending"}
                               </Badge>
                             </div>
 
@@ -351,7 +362,9 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                     fill="currentColor"
                                   />
                                   <span>
-                                    {applicant.freelancer.averageRating.toFixed(1)}
+                                    {applicant.freelancer.averageRating.toFixed(
+                                      1,
+                                    )}
                                   </span>
                                 </div>
                               )}
@@ -389,6 +402,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                     <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                          {console.log(selectedApplicant)}
                           {selectedApplicant.freelancer?.profilePicture ? (
                             <img
                               src={selectedApplicant.freelancer.profilePicture}
@@ -407,19 +421,28 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                               "Anonymous Freelancer"}
                           </h2>
                           <div className="flex items-center mt-1">
-                            {selectedApplicant.freelancer?.averageRating > 0 && (
+                            {selectedApplicant.freelancer?.averageRating >
+                              0 && (
                               <div className="flex items-center mr-4">
                                 <div className="flex">
                                   {[...Array(5)].map((_, i) => (
                                     <Star
                                       key={i}
                                       className={`h-4 w-4 ${
-                                        i < Math.floor(selectedApplicant.freelancer.averageRating)
+                                        i <
+                                        Math.floor(
+                                          selectedApplicant.freelancer
+                                            .averageRating,
+                                        )
                                           ? "text-yellow-400"
                                           : "text-gray-300 dark:text-gray-600"
                                       }`}
                                       fill={
-                                        i < Math.floor(selectedApplicant.freelancer.averageRating)
+                                        i <
+                                        Math.floor(
+                                          selectedApplicant.freelancer
+                                            .averageRating,
+                                        )
                                           ? "currentColor"
                                           : "none"
                                       }
@@ -427,71 +450,99 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                   ))}
                                 </div>
                                 <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                                  {selectedApplicant.freelancer.averageRating.toFixed(1)}
-                                  {selectedApplicant.freelancer.ratings?.length > 0 && (
+                                  {selectedApplicant.freelancer.averageRating.toFixed(
+                                    1,
+                                  )}
+                                  {selectedApplicant.freelancer.ratings
+                                    ?.length > 0 && (
                                     <span className="ml-1">
-                                      ({selectedApplicant.freelancer.ratings.length} reviews)
+                                      (
+                                      {
+                                        selectedApplicant.freelancer.ratings
+                                          .length
+                                      }{" "}
+                                      reviews)
                                     </span>
                                   )}
                                 </span>
                               </div>
                             )}
                             <Badge
-                              variant={job.freelancer && job.freelancer._id === selectedApplicant.freelancer._id ? "success" : "default"}
+                              variant={
+                                job.freelancer &&
+                                job.freelancer._id ===
+                                  selectedApplicant.freelancer._id
+                                  ? "success"
+                                  : "default"
+                              }
                               className="ml-2 text-xs"
                             >
-                              {job.freelancer && job.freelancer._id === selectedApplicant.freelancer._id ? "Selected" : "Pending"}
+                              {job.freelancer &&
+                              job.freelancer._id ===
+                                selectedApplicant.freelancer._id
+                                ? "Selected"
+                                : "Pending"}
                             </Badge>
                           </div>
-                          
+
                           {/* Completed jobs count */}
                           {selectedApplicant.freelancer?.completedJobs > 0 && (
                             <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
                               <Award className="h-4 w-4 mr-1" />
-                              <span>{selectedApplicant.freelancer.completedJobs} jobs completed</span>
+                              <span>
+                                {selectedApplicant.freelancer.completedJobs}{" "}
+                                jobs completed
+                              </span>
                             </div>
                           )}
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        {job.status === "open" && selectedApplicant.status !== "assigned" && (
-                          <Button
-                            onClick={() =>
-                              handleAcceptApplicant(selectedApplicant.freelancer._id)
-                            }
-                            isLoading={acceptMutation.isPending}
-                            disabled={acceptMutation.isPending}
-                            className="flex items-center bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white border-0 transition-all duration-200 transform hover:scale-105"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Accept
-                          </Button>
-                        )}
-                        
-                        {/* Milestone button - only show when freelancer is accepted */}
-                        {job.freelancer && job.freelancer._id === selectedApplicant.freelancer._id && (
-                          <Link to={`/job/${jobId}/milestones`}>
+                        {job.status === "open" &&
+                          selectedApplicant.status !== "assigned" && (
                             <Button
-                              variant="outline"
-                              className="flex items-center border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200 transform hover:scale-105"
+                              onClick={() =>
+                                handleAcceptApplicant(
+                                  selectedApplicant.freelancer._id,
+                                )
+                              }
+                              isLoading={acceptMutation.isPending}
+                              disabled={acceptMutation.isPending}
+                              className="flex items-center bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white border-0 transition-all duration-200 transform hover:scale-105"
                             >
-                              <Target className="h-4 w-4 mr-2" />
-                              Milestones
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Accept
                             </Button>
-                          </Link>
-                        )}
-                        
-                        <Button
-                          onClick={handleMessageApplicant}
-                          isLoading={messageMutation.isPending}
-                          disabled={messageMutation.isPending}
-                          variant="outline"
-                          className="flex items-center border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200"
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Message
-                        </Button>
+                          )}
+
+                        {/* Milestone button - only show when freelancer is accepted */}
+                        {job.freelancer &&
+                          job.freelancer._id ===
+                            selectedApplicant.freelancer._id && (
+                            <Link to={`/job/${jobId}/milestones`}>
+                              <Button
+                                variant="outline"
+                                className="flex items-center border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200 transform hover:scale-105"
+                              >
+                                <Target className="h-4 w-4 mr-2" />
+                                Milestones
+                              </Button>
+                            </Link>
+                          )}
+
+                        {job.freelancer && job.freelancer._id === selectedApplicant.freelancer._id ? (
+                          <Button
+                            onClick={handleMessageApplicant}
+                            isLoading={messageMutation.isPending}
+                            disabled={messageMutation.isPending}
+                            variant="outline"
+                            className="flex items-center border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200"
+                          >
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Message
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
 
@@ -570,7 +621,8 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                   Jobs Completed
                                 </p>
                                 <p className="font-semibold text-gray-900 dark:text-white">
-                                  {selectedApplicant.freelancer?.completedJobs || 0}
+                                  {selectedApplicant.freelancer
+                                    ?.completedJobs || 0}
                                 </p>
                               </div>
                             </div>
@@ -583,8 +635,11 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                   Average Rating
                                 </p>
                                 <p className="font-semibold text-gray-900 dark:text-white">
-                                  {selectedApplicant.freelancer?.averageRating > 0
-                                    ? selectedApplicant.freelancer.averageRating.toFixed(1)
+                                  {selectedApplicant.freelancer?.averageRating >
+                                  0
+                                    ? selectedApplicant.freelancer.averageRating.toFixed(
+                                        1,
+                                      )
                                     : "No ratings yet"}
                                 </p>
                               </div>
@@ -598,7 +653,8 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                         selectedApplicant.freelancer.ratings.length > 0 && (
                           <div className="mb-4">
                             <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-                              Recent Reviews ({selectedApplicant.freelancer.ratings.length})
+                              Recent Reviews (
+                              {selectedApplicant.freelancer.ratings.length})
                             </h4>
                             <div className="space-y-3">
                               {selectedApplicant.freelancer.ratings
@@ -638,13 +694,13 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                         )}
                                       </span>
                                     </div>
-                                    
+
                                     {review.from?.name && (
                                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                                         By {review.from.name}
                                       </p>
                                     )}
-                                    
+
                                     {review.review && (
                                       <p className="text-gray-600 dark:text-gray-400 text-sm">
                                         "{review.review}"
@@ -652,14 +708,20 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                                     )}
                                   </div>
                                 ))}
-                              
-                              {selectedApplicant.freelancer.ratings.length > 3 && (
+
+                              {selectedApplicant.freelancer.ratings.length >
+                                3 && (
                                 <div className="text-center">
                                   <Link
                                     to={`/profile/${selectedApplicant.freelancer._id}`}
                                     className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 font-medium text-sm"
                                   >
-                                    View all {selectedApplicant.freelancer.ratings.length} reviews
+                                    View all{" "}
+                                    {
+                                      selectedApplicant.freelancer.ratings
+                                        .length
+                                    }{" "}
+                                    reviews
                                   </Link>
                                 </div>
                               )}
@@ -678,7 +740,10 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                             <span>
                               Member since{" "}
                               {format(
-                                new Date(selectedApplicant.freelancer?.createdAt || Date.now()),
+                                new Date(
+                                  selectedApplicant.freelancer?.createdAt ||
+                                    Date.now(),
+                                ),
                                 "MMMM yyyy",
                               )}
                             </span>
@@ -691,8 +756,8 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                         <Link
                           to={`/profile/${selectedApplicant.freelancer._id}`}
                         >
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             className="w-full border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200"
                           >
                             View Full Profile

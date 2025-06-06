@@ -192,6 +192,14 @@ function App({ darkMode, setDarkMode }) {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/notifications/settings"
+              element={
+                <PrivateRoute>
+                  <NotificationPage />
+                </PrivateRoute>
+              }
+            />
             {/* 🆕 Chat Routes (standardized) */}
             <Route
               path="/chat"

@@ -1,30 +1,40 @@
 // src/pages/notifications/NotificationPage.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Settings } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
 import NotificationCenter from '../../components/notifications/NotificationCenter';
 import NotificationPreferences from '../../components/notifications/NotificationPreferences';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
 const NotificationPage = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('notifications');
+
+  useEffect(() => {
+    if (location.pathname.includes('settings')) {
+      setActiveTab('notifications/settings');
+    } else {
+      setActiveTab('notifications');
+    }
+  }, [location.pathname]);
 
   const tabs = [
     {
       id: 'notifications',
       label: 'Notifications',
       icon: Bell,
-      component: NotificationCenter
+      component: NotificationCenter,
     },
     {
-      id: 'preferences',
+      id: 'notifications/settings',
       label: 'Preferences',
       icon: Settings,
-      component: NotificationPreferences
-    }
+      component: NotificationPreferences,
+    },
   ];
 
-  const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component;
+  const ActiveComponent = tabs.find((tab) => tab.id === activeTab)?.component;
 
   return (
     <DashboardLayout>
@@ -36,9 +46,9 @@ const NotificationPage = () => {
               {tabs.map((tab) => {
                 const IconComponent = tab.icon;
                 return (
-                  <button
+                  <Link
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    to={`/notifications${tab.id === 'notifications' ? '' : '/settings'}`}
                     className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === tab.id
                         ? 'border-orange-500 text-orange-600 dark:text-orange-400'
@@ -47,24 +57,25 @@ const NotificationPage = () => {
                   >
                     <IconComponent className="h-5 w-5" />
                     <span>{tab.label}</span>
-                  </button>
+                  </Link>
                 );
               })}
             </nav>
           </div>
         </div>
-  
+
         {/* Tab Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="py-6"
-        >
-          {ActiveComponent && <ActiveComponent />}
-        </motion.div>
+        <div className="py-6">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {ActiveComponent && <ActiveComponent />}
+          </motion.div>
+        </div>
       </div>
     </DashboardLayout>
   );

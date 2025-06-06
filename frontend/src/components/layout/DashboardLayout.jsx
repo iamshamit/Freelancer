@@ -85,6 +85,7 @@ const DashboardLayout = ({ children }) => {
         name: 'Notifications',
         icon: <Bell className="w-5 h-5" />,
         path: '/notifications',
+        paths: ['/notifications/settings'] // Example of additional paths
       }
     ];
 
@@ -349,7 +350,7 @@ const DashboardLayout = ({ children }) => {
                     className={`flex items-center ${
                       sidebarCollapsed ? 'justify-center' : 'justify-start'
                     } px-3 py-3 rounded-lg transition-all ${
-                      location.pathname === item.path
+                    location.pathname === item.path || (item.paths && item.paths.includes(location.pathname))
                         ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
                         : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}

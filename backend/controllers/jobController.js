@@ -1,5 +1,5 @@
 // backend/controllers/jobController.js
-const { Job, User, Transaction, Notification, Escrow } = require("../models");
+const { Job, User, Transaction, Notification, Escrow, Chat } = require("../models");
 const { createEscrowDeposit, createEscrowRelease } = require("../utils/transactionHelpers");
 const { createAndEmitNotification } = require("../utils/notificationHelper");
 
@@ -102,7 +102,7 @@ const getJobs = async (req, res) => {
 
     const jobs = await Job.find(filter)
       .populate("employer", "name profilePicture")
-      .populate("domain", "name icon") // Add this line
+      .populate("domain", "name icon")
       .sort({ createdAt: -1 })
       .limit(pageSize)
       .skip(pageSize * (page - 1));
@@ -127,7 +127,7 @@ const getJobById = async (req, res) => {
     const job = await Job.findById(req.params.id)
       .populate("employer", "name email profilePicture")
       .populate("freelancer", "name email profilePicture")
-      .populate("applicants.freelancer", "name profilePicture");
+      .populate("applicants.freelancer", "name profilePicture skills averageRating completedJobs");
 
     if (job) {
       // Get employer job count
@@ -408,7 +408,7 @@ const updateMilestone = async (req, res) => {
     });
 
     res.json({
-      message: `Milestone updated to ${percentage}% and payment released`,
+      message: `Milestone updated to ${percentage}% and payment released${percentage === 100 ? '. Chat has been archived.' : ''}`,
       paymentAmount,
     });
   } catch (error) {

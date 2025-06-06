@@ -345,7 +345,7 @@ const NotificationCenter = () => {
           <div className="space-y-3">
             {isLoading ? (
               <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                <SkeletonLoader type="notification-center" count={5} />
+                <SkeletonLoader type="list" count={5} />
               </div>
             ) : notifications.length > 0 ? (
               <>

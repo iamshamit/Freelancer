@@ -1,7 +1,7 @@
 // src/pages/jobs/PostJobPage.jsx
 import { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -53,6 +53,9 @@ const PostJobPage = () => {
   const budgetRef = useRef(null);
   const reviewRef = useRef(null);
   
+  // Query client
+  const queryClient = useQueryClient();
+  
   // Fetch domains
   const { data: domains, isLoading: domainsLoading } = useQuery({
     queryKey: ["domains"],
@@ -64,6 +67,7 @@ const PostJobPage = () => {
     mutationFn: (jobData) => api.job.create(jobData),
     onSuccess: () => {
       setSubmissionSuccess(true);
+      queryClient.invalidateQueries(["employerJobs"]);
       setTimeout(() => {
         navigate("/employer/jobs");
       }, 2000);
