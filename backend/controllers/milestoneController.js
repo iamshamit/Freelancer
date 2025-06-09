@@ -1,5 +1,5 @@
 // backend/controllers/milestoneController.js
-const { Milestone, Job, Escrow, Transaction, Notification, User } = require('../models');
+const { Milestone, Job, Escrow, Transaction, Notification, User, Chat } = require('../models');
 const { createEscrowRelease } = require('../utils/transactionHelpers');
 const { createAndEmitNotification } = require('../utils/notificationHelper');
 
@@ -253,6 +253,19 @@ const approveMilestone = async (req, res) => {
     }
     
     await job.save();
+
+    // Archive chat
+    if (isJobCompleted) {
+      console.log("Attempting to archive chat...");
+      const chat = await Chat.findOne({ job: jobId });
+      if (chat) {
+        console.log(`Job ID: ${jobId}, Chat ID: ${chat._id}`);
+        console.log(`Before archive - Chat isArchived: ${chat.isArchived}`);
+        chat.isArchived = true;
+        await chat.save();
+        console.log(`After archive - Chat isArchived: ${chat.isArchived}`);
+      }
+    }
 
     // Update escrow
     const escrow = await Escrow.findOne({ job: jobId });

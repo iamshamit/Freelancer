@@ -1,5 +1,5 @@
 // src/components/layout/DashboardLayout.jsx
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -21,6 +21,8 @@ const DashboardLayout = ({ children }) => {
     const savedState = localStorage.getItem('sidebarCollapsed');
     return savedState ? JSON.parse(savedState) : false;
   });
+  const [isSidebarManuallyToggled, setIsSidebarManuallyToggled] = useState(false);
+  const isManuallyToggled = useRef(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { isConnected } = useRealTimeNotifications();
@@ -122,7 +124,30 @@ const DashboardLayout = ({ children }) => {
 
   // Toggle sidebar collapse state
   const toggleSidebar = () => {
+    setIsSidebarManuallyToggled(true);
+    isManuallyToggled.current = true;
     setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  // Animation variants for sidebar items
+  const sidebarItemVariants = {
+    expanded: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.3,
+        ease: "easeOut",
+        delay: 0.1
+      }
+    },
+    collapsed: {
+      opacity: 0,
+      x: -20,
+      transition: {
+        duration: 0.2,
+        ease: "easeIn"
+      }
+    }
   };
 
   return (
@@ -320,76 +345,122 @@ const DashboardLayout = ({ children }) => {
         )}
       </AnimatePresence>
 
-      {/* Desktop sidebar - collapsible */}
+      {/* Desktop sidebar - using CSS transitions instead of Framer Motion for stability */}
       <div 
-        className={`hidden md:block fixed inset-y-0 left-0 z-20 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ${
+        className={`hidden md:block fixed inset-y-0 left-0 z-20 bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700 transition-[width] duration-300 ease-in-out ${
           sidebarCollapsed ? 'w-20' : 'w-64'
         }`}
+        style={{ transitionProperty: 'width' }}
       >
         <div className="flex flex-col h-full pt-16">
           {/* Sidebar toggle button */}
-          <button
-                        onClick={toggleSidebar}
-            className="absolute right-0 top-20 transform translate-x-1/2 bg-white dark:bg-gray-800 rounded-full p-1.5 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 focus:outline-none shadow-sm"
+          <motion.button
+            onClick={toggleSidebar}
+            className="absolute right-0 top-20 transform translate-x-1/2 bg-white dark:bg-gray-800 rounded-full p-1.5 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 focus:outline-none shadow-sm z-10"
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
           >
-            {sidebarCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
+            <motion.div
+              animate={{
+                rotate: sidebarCollapsed ? 180 : 0,
+              }}
+              transition={{ duration: isSidebarManuallyToggled ? 0.3 : 0 }}
+              onAnimationComplete={() => {
+                setIsSidebarManuallyToggled(false);
+                isManuallyToggled.current = false;
+              }}
+            >
               <ChevronLeft className="h-4 w-4" />
-            )}
-          </button>
-          
+            </motion.div>
+          </motion.button>
+
           {/* Navigation */}
-          <nav className="mt-6 px-3 flex-1 overflow-y-auto">
+          <nav className="mt-6 px-3 flex-1 overflow-y-auto overflow-x-hidden">
             <ul className="space-y-2">
-              {getNavItems().map((item) => (
-                <li key={item.name}>
-                  <Link
-                    to={item.path}
-                    className={`flex items-center ${
-                      sidebarCollapsed ? 'justify-center' : 'justify-start'
-                    } px-3 py-3 rounded-lg transition-all ${
-                    location.pathname === item.path || (item.paths && item.paths.includes(location.pathname))
-                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                    title={sidebarCollapsed ? item.name : ""}
-                  >
-                    <div className={sidebarCollapsed ? "w-6 h-6 flex items-center justify-center" : ""}>
-                      {item.icon}
-                    </div>
-                    {!sidebarCollapsed && (
-                      <span className="ml-3 transition-opacity duration-200">{item.name}</span>
-                    )}
-                  </Link>
-                </li>
-              ))}
+              {getNavItems().map((item) => {
+                const isActive = location.pathname === item.path || (item.paths && item.paths.includes(location.pathname));
+                
+                return (
+                  <li key={item.name}>
+                    <Link
+                      to={item.path}
+                      className={`relative flex items-center px-3 py-3 rounded-lg transition-colors duration-200 group ${
+                        isActive
+                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                      title={sidebarCollapsed ? item.name : ""}
+                    >
+                      {/* Icon container */}
+                      <div className={`flex items-center justify-center ${sidebarCollapsed ? 'w-6' : 'w-5'}`}>
+                        {item.icon}
+                      </div>
+                      
+                      {/* Text label with CSS transition */}
+                      <span 
+                        className={`ml-3 whitespace-nowrap transition-all duration-300 ${
+                          sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                        }`}
+                      >
+                        {item.name}
+                      </span>
+                      
+                      {/* Tooltip for collapsed state */}
+                      {sidebarCollapsed && (
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          whileHover={{ opacity: 1, x: 0 }}
+                          className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-md whitespace-nowrap pointer-events-none z-50"
+                        >
+                          {item.name}
+                        </motion.div>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
           
           {/* Sidebar footer */}
-          <div className={`p-3 border-t border-gray-200 dark:border-gray-700 ${
-            sidebarCollapsed ? 'text-center' : ''
-          }`}>
+          <div className="p-3 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={logout}
-              className={`flex items-center ${
-                sidebarCollapsed ? 'justify-center w-full px-3 py-3' : 'px-3 py-3 w-full'
-              } rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+              className="relative flex items-center px-3 py-3 w-full rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 group"
               title={sidebarCollapsed ? "Sign out" : ""}
             >
-              <LogOut className="h-5 w-5" />
-              {!sidebarCollapsed && <span className="ml-3">Sign out</span>}
+              <div className={`flex items-center justify-center ${sidebarCollapsed ? 'w-6' : 'w-5'}`}>
+                <LogOut className="h-5 w-5" />
+              </div>
+              
+              <span 
+                className={`ml-3 whitespace-nowrap transition-all duration-300 ${
+                  sidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                }`}
+              >
+                Sign out
+              </span>
+              
+              {/* Tooltip for collapsed state */}
+              {sidebarCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  whileHover={{ opacity: 1, x: 0 }}
+                  className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-md whitespace-nowrap pointer-events-none z-50"
+                >
+                  Sign out
+                </motion.div>
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main content - adjusts based on sidebar state */}
-      <main className={`transition-all duration-300 ${
+      {/* Main content - using CSS transitions for stability */}
+      <main className={`transition-[padding-left] duration-300 ease-in-out pt-16 md:pt-16 ${
         sidebarCollapsed ? 'md:pl-20' : 'md:pl-64'
-      } pt-16 md:pt-16`}>
+      }`}>
         <ErrorBoundary
           FallbackComponent={ErrorFallback}
           onReset={() => {

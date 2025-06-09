@@ -25,7 +25,6 @@ router.get('/applied', protect, freelancer, getAppliedJobs);
 router.get('/:id', protect, getJobById);
 router.post('/:id/apply', protect, freelancer, applyForJob);
 router.put('/:id/select/:freelancerId', protect, employer, selectFreelancer);
-router.put('/:id/milestone', protect, employer, updateMilestone);
 router.post('/:id/rate', protect, employer, rateFreelancer);
 
 // Milestone routes

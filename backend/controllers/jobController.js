@@ -302,122 +302,6 @@ const selectFreelancer = async (req, res) => {
   }
 };
 
-// @desc    Update job milestone
-// @route   PUT /api/jobs/:id/milestone
-// @access  Private/Employer
-const updateMilestone = async (req, res) => {
-  try {
-    const { percentage } = req.body;
-
-    if (percentage < 0 || percentage > 100 || percentage % 10 !== 0) {
-      return res
-        .status(400)
-        .json({
-          message: "Percentage must be in 10% increments between 0 and 100",
-        });
-    }
-
-    const job = await Job.findById(req.params.id);
-
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-
-    if (job.employer.toString() !== req.user._id.toString()) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
-    if (job.status !== "assigned") {
-      return res.status(400).json({ message: "This job is not in progress" });
-    }
-
-    // Calculate payment amount
-    const paymentAmount =
-      (job.budget * (percentage - job.milestonePercentage)) / 100;
-
-    // Update job
-    job.milestonePercentage = percentage;
-    job.paymentReleased += paymentAmount;
-
-    if (percentage === 100) {
-      job.status = "completed";
-      job.completedAt = Date.now();
-
-      // Update freelancer's completed jobs count
-      await User.findByIdAndUpdate(job.freelancer, {
-        $inc: { completedJobs: 1 },
-      });
-    }
-
-    await job.save();
-
-    // Update escrow
-    const escrow = await Escrow.findOne({ job: job._id });
-    if (escrow) {
-      // Add milestone to escrow
-      escrow.milestones.push({
-        percentage,
-        amount: paymentAmount,
-        released: true,
-        releasedAt: Date.now()
-      });
-      
-      // Update released amount
-      escrow.releasedAmount += paymentAmount;
-      
-      // Check if all funds released
-      if (percentage === 100) {
-        escrow.status = 'completed';
-      }
-      
-      await escrow.save();
-    }
-
-    // Create transaction record for releasing payment from escrow to freelancer
-    await createEscrowRelease(job._id, escrow._id, job.freelancer, paymentAmount, percentage);
-
-    // Create and emit notification for freelancer
-    const io = req.app.get('io');
-    await createAndEmitNotification(io, {
-      recipient: job.freelancer,
-      sender: req.user._id,
-      type: "payment_released",
-      title: percentage === 100 ? "Final Payment Released" : "Milestone Payment Released",
-      message: `${percentage}% milestone approved and payment of $${paymentAmount.toFixed(2)} released for: ${job.title}`,
-      job: job._id,
-      link: `/jobs/${job._id}`,
-      actions: [
-        {
-          label: 'View Job',
-          link: `/jobs/${job._id}`,
-          primary: true
-        },
-        {
-          label: 'View Transactions',
-          link: `/transactions`,
-          primary: false
-        }
-      ],
-      metadata: {
-        milestonePercentage: percentage,
-        paymentAmount: paymentAmount,
-        totalReleased: job.paymentReleased,
-        jobTitle: job.title,
-        isCompleted: percentage === 100
-      }
-    });
-
-    res.json({
-      message: `Milestone updated to ${percentage}% and payment released${percentage === 100 ? '. Chat has been archived.' : ''}`,
-      paymentAmount,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-
 // @desc    Get employer's jobs
 // @route   GET /api/jobs/employer
 // @access  Private/Employer
@@ -574,9 +458,8 @@ module.exports = {
   getJobById,
   applyForJob,
   selectFreelancer,
-  updateMilestone,
   getEmployerJobs,
   getFreelancerJobs,
   rateFreelancer,
   getAppliedJobs,
-};
+};  
