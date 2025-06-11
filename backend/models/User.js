@@ -114,7 +114,33 @@ const userSchema = new mongoose.Schema({
       start: { type: String, default: '22:00' },
       end: { type: String, default: '08:00' }
     }
-  }
+  },
+  savedSearches: [{
+    query: String,
+    filters: {
+      type: String,
+      domain: String,
+      skills: [String],
+      minBudget: Number,
+      maxBudget: Number,
+      minRating: Number
+    },
+    type: {
+      type: String,
+      enum: ['jobs', 'freelancers', 'all']
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  searchHistory: [{
+    query: String,
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 });
 
 // Hash password before saving

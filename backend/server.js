@@ -15,6 +15,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const domainRoutes = require('./routes/domainRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const searchRoutes = require('./routes/searchRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -141,6 +142,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/domains', domainRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/search', searchRoutes);
 
 // Test route
 app.get('/', (req, res) => {

@@ -1,39 +1,90 @@
 // src/pages/dashboard/FreelancerDashboard.jsx
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
   Briefcase, Clock, Archive, Send, TrendingUp, 
-  DollarSign, Users, ChevronRight, Search
+  DollarSign, Users, ChevronRight, Search, Check, X, MessageSquare
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
+import JobRecommendations from '../../components/search/JobRecommendations';
+import AuthContext from '../../context/AuthContext';
 import api from '../../services/api';
 
-const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
+const FreelancerDashboard = ({ darkMode, toggleDarkMode }) => {
+  const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('recommended');
   
-  // Fetch user stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['freelancerStats'],
-    queryFn: () => api.job.getFreelancerStats(),
+  // Fetch user profile for stats
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: api.user.getProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  // Fetch recommended jobs
-  const { data: recommendedJobs, isLoading: recommendedLoading } = useQuery({
-    queryKey: ['recommendedJobs'],
-    queryFn: () => api.job.getRecommendedJobs(),
+  // Fetch freelancer jobs (applied, assigned, completed)
+  const { data: freelancerJobs, isLoading: jobsLoading } = useQuery({
+    queryKey: ['freelancerJobs'],
+    queryFn: api.job.getFreelancerJobs,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch applied jobs for recent applications
+  const { data: appliedJobs, isLoading: applicationsLoading } = useQuery({
+    queryKey: ['appliedJobs'],
+    queryFn: api.job.getAppliedJobs,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  // Fetch recent applications
-  const { data: recentApplications, isLoading: applicationsLoading } = useQuery({
-    queryKey: ['recentApplications'],
-    queryFn: () => api.job.getRecentApplications(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+    queryKey: ['payments'],
+    queryFn: () => api.payment.getHistory(),
   });
+  
+  // Calculate stats from fetched data
+  const stats = {
+    name: user?.name || profile?.name || 'Freelancer',
+    totalEarnings: payments.reduce((sum, p) => sum + p.amount, 0) || 0,
+    earningsGrowth: 12, // This would come from backend calculation
+    completedJobs: profile?.completedJobs || 0,
+    activeJobs: freelancerJobs?.assigned?.length || 0,
+    successRate: profile?.completedJobs > 0 ? Math.round((profile?.completedJobs / (profile?.completedJobs + 2)) * 100) : 0,
+    activeJobsList: freelancerJobs?.assigned || []
+  };
+
+  // Get recent applications (last 5)
+  const recentApplications = appliedJobs?.slice(0, 5).map(job => ({
+    _id: job._id,
+    job: {
+      title: job.title,
+      _id: job._id
+    },
+    status: job.applicationStatus || 'pending',
+    timeAgo: getTimeAgo(job.applicants?.find(a => a.freelancer === user?._id)?.appliedAt || job.createdAt)
+  })) || [];
+
+  // Helper function to calculate time ago
+  function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    const intervals = {
+      year: 31536000,
+      month: 2592000,
+      week: 604800,
+      day: 86400,
+      hour: 3600,
+      minute: 60
+    };
+
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+      const interval = Math.floor(seconds / secondsInUnit);
+      if (interval >= 1) {
+        return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+      }
+    }
+    return 'just now';
+  }
 
   // Animation variants
   const containerVariants = {
@@ -52,8 +103,10 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
     visible: { y: 0, opacity: 1 }
   };
 
+  const isLoading = profileLoading || jobsLoading;
+
   return (
-    <DashboardLayout darkMode={darkMode} setDarkMode={setDarkMode}>
+    <DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
       <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
         {/* Welcome section */}
         <motion.div
@@ -63,7 +116,7 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, <span className="text-orange-500">{stats?.name || 'Freelancer'}</span>
+            Welcome back, <span className="text-orange-500">{stats.name}</span>
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Here's what's happening with your freelancing today.
@@ -88,17 +141,17 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
                 <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {paymentsLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  ${stats?.totalEarnings?.toFixed(2) || '0.00'}
+                  ${stats.totalEarnings.toFixed(2)}
                 </p>
                 <div className="mt-2 flex items-center text-sm">
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
                   <span className="text-green-500 font-medium">
-                    +{stats?.earningsGrowth || 0}%
+                    +{stats.earningsGrowth}%
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 ml-1">
                     from last month
@@ -119,11 +172,11 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
                 <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {paymentsLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats?.completedJobs || 0}
+                {stats.completedJobs}
               </p>
             )}
             <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -142,11 +195,11 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
                 <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {paymentsLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats?.activeJobs || 0}
+                {stats.activeJobs}
               </p>
             )}
             <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -165,11 +218,11 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
                 <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {isLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats?.successRate || 0}%
+                {stats.successRate}%
               </p>
             )}
             <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -178,136 +231,8 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
           </motion.div>
         </motion.div>
 
-        {/* Jobs section */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="mb-8"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-            <motion.h2 
-              variants={itemVariants}
-              className="text-xl font-bold text-gray-900 dark:text-white"
-            >
-              Jobs For You
-            </motion.h2>
-            <motion.div 
-              variants={itemVariants}
-              className="mt-3 sm:mt-0 flex space-x-2"
-            >
-              <button
-                onClick={() => setActiveTab('recommended')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'recommended'
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-              >
-                Recommended
-              </button>
-              <button
-                onClick={() => setActiveTab('recent')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'recent'
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-              >
-                Recent
-              </button>
-            </motion.div>
-          </div>
-
-          {/* Job listings */}
-          {recommendedLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <SkeletonLoader key={i} type="card" />
-              ))}
-            </div>
-          ) : recommendedJobs?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedJobs.slice(0, 3).map((job, index) => (
-                <motion.div
-                  key={job._id}
-                  variants={itemVariants}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      job.domain.color === 'blue' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                      job.domain.color === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      job.domain.color === 'purple' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' :
-                      job.domain.color === 'orange' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {job.domain.name}
-                    </span>
-                    <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>${job.budget.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
-                    {job.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm line-clamp-2">
-                    {job.description}
-                  </p>
-                  
-                  <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs mb-4">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>Posted {job.timeAgo}</span>
-                  </div>
-                  
-                  <Link 
-                    to={`/jobs/${job._id}`}
-                    className="flex items-center justify-center w-full bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
-                  >
-                    View Job
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <motion.div
-                            variants={itemVariants}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center"
-            >
-              <div className="flex justify-center mb-4">
-                <Search className="h-12 w-12 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No jobs found
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                We couldn't find any jobs matching your skills. Try updating your profile with more skills.
-              </p>
-              <Link 
-                to="/jobs"
-                className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
-              >
-                Browse All Jobs
-              </Link>
-            </motion.div>
-          )}
-
-          <motion.div 
-            variants={itemVariants}
-            className="mt-6 text-center"
-          >
-            <Link 
-              to="/jobs" 
-              className="inline-flex items-center text-orange-500 hover:text-orange-600 font-medium"
-            >
-              View all available jobs
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Link>
-          </motion.div>
-        </motion.div>
+        {/* Job Recommendations Section */}
+        <JobRecommendations limit={3} />
 
         {/* Recent applications */}
         <motion.div
@@ -325,7 +250,7 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
 
           {applicationsLoading ? (
             <SkeletonLoader type="list" count={3} />
-          ) : recentApplications?.length > 0 ? (
+          ) : recentApplications.length > 0 ? (
             <motion.div 
               variants={itemVariants}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
@@ -333,7 +258,7 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
               <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                 {recentApplications.slice(0, 3).map((application) => (
                   <li key={application._id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <Link to={`/applications/${application._id}`} className="flex items-center justify-between">
+                    <Link to={`/jobs/${application._id}`} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           application.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
@@ -394,7 +319,7 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
             </motion.div>
           )}
 
-          {recentApplications?.length > 0 && (
+          {recentApplications.length > 0 && (
             <motion.div 
               variants={itemVariants}
               className="mt-6 text-center"
@@ -423,68 +348,63 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
             Active Jobs
           </motion.h2>
 
-          {statsLoading ? (
+          {jobsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[...Array(2)].map((_, i) => (
                 <SkeletonLoader key={i} type="card" />
               ))}
             </div>
-          ) : stats?.activeJobs > 0 ? (
+          ) : stats.activeJobs > 0 ? (
             <motion.div 
               variants={itemVariants}
               className="grid grid-cols-1 md:grid-cols-2 gap-6"
             >
-              {stats.activeJobsList?.slice(0, 2).map((job) => (
+              {stats.activeJobsList.slice(0, 2).map((job) => (
                 <div 
                   key={job._id}
                   className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      job.domain.color === 'blue' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                      job.domain.color === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      job.domain.color === 'purple' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' :
-                      job.domain.color === 'orange' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {job.domain.name}
-                    </span>
-                    <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>${job.budget.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                     {job.title}
                   </h3>
                   
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center text-gray-600 dark:text-gray-400">
+                      <Users className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{job.employer?.name}</span>
+                    </div>
+                    <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      <span>${job.budget}</span>
+                    </div>
+                  </div>
+                  
                   <div className="mb-4">
                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
                       <span>Progress</span>
-                      <span>{job.progress}%</span>
+                      <span>{job.milestonePercentage || 0}%</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
                       <div 
-                        className="bg-orange-500 h-2.5 rounded-full" 
-                        style={{ width: `${job.progress}%` }}
+                        className="bg-orange-500 h-2.5 rounded-full transition-all duration-300" 
+                        style={{ width: `${job.milestonePercentage || 0}%` }}
                       ></div>
                     </div>
                   </div>
                   
                   <div className="flex space-x-3">
                     <Link 
-                      to={`/chat/${job.chatId}`}
+                      to={`/chat`}
                       className="flex-1 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Chat
                     </Link>
                     <Link 
-                      to={`/jobs/${job._id}/milestones`}
+                      to={`/milestones/${job._id}`}
                       className="flex-1 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
                     >
-                      Details
+                      Milestones
                     </Link>
                   </div>
                 </div>
@@ -509,21 +429,6 @@ const FreelancerDashboard = ({ darkMode, setDarkMode }) => {
                 className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
               >
                 Find Jobs
-              </Link>
-            </motion.div>
-          )}
-
-          {stats?.activeJobs > 0 && (
-            <motion.div 
-              variants={itemVariants}
-              className="mt-6 text-center"
-            >
-              <Link 
-                to="/freelancer/jobs/active" 
-                className="inline-flex items-center text-orange-500 hover:text-orange-600 font-medium"
-              >
-                View all active jobs
-                <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
             </motion.div>
           )}

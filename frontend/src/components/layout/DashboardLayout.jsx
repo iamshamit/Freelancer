@@ -13,6 +13,7 @@ import AuthContext from '../../context/AuthContext';
 import ErrorFallback from '../common/ErrorFallback';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 import useRealTimeNotifications from '../../hooks/useRealTimeNotifications';
+import GlobalSearchBar from '../search/GlobalSearchBar';
 
 const DashboardLayout = ({ children }) => {
   const { user, logout } = useContext(AuthContext);
@@ -178,18 +179,7 @@ const DashboardLayout = ({ children }) => {
 
             {/* Center section: Search */}
             <div className="hidden md:block flex-1 max-w-md mx-4">
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full py-2 pl-10 pr-4 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
-                </div>
-              </form>
+              <GlobalSearchBar />
             </div>
 
             {/* Right section: Notifications, theme toggle, profile */}
@@ -263,18 +253,7 @@ const DashboardLayout = ({ children }) => {
 
       {/* Mobile search - visible on small screens */}
       <div className="md:hidden bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 pt-16 px-4 pb-3">
-        <form onSubmit={handleSearchSubmit} className="relative">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-2 pl-10 pr-4 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-600 focus:border-transparent"
-          />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-        </form>
+        <GlobalSearchBar />
       </div>
 
       {/* Mobile sidebar - slides in from left */}

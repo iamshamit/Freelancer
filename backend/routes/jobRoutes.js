@@ -9,11 +9,12 @@ const {
   getJobById,
   applyForJob,
   selectFreelancer,
-  updateMilestone,
   getEmployerJobs,
   getFreelancerJobs,
   rateFreelancer,
   getAppliedJobs,
+  getRecommendedJobs,
+  getSuggestedDomains
 } = require('../controllers/jobController');
 const { protect, employer, freelancer } = require('../middleware/auth');
 
@@ -22,6 +23,8 @@ router.get('/', protect, getJobs);
 router.get('/employer', protect, employer, getEmployerJobs);
 router.get('/freelancer', protect, freelancer, getFreelancerJobs);
 router.get('/applied', protect, freelancer, getAppliedJobs);
+router.get('/recommended', protect, getRecommendedJobs);
+router.get('/suggested-domains', protect, employer, getSuggestedDomains);
 router.get('/:id', protect, getJobById);
 router.post('/:id/apply', protect, freelancer, applyForJob);
 router.put('/:id/select/:freelancerId', protect, employer, selectFreelancer);

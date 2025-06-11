@@ -1,11 +1,10 @@
-// src/components/jobs/JobCard.jsx
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Briefcase, DollarSign, Calendar, Users, Clock } from 'lucide-react';
+import { Briefcase, DollarSign, Calendar, Users, Clock, Sparkles } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Badge from '../common/Badge';
 
-const JobCard = ({ job, isEmployer = false }) => {
+const JobCard = ({ job, isEmployer = false, showRecommendedBadge = false }) => {
   // Handle case where job is undefined or missing properties
   if (!job || typeof job !== 'object') {
     return null;
@@ -46,6 +45,14 @@ const JobCard = ({ job, isEmployer = false }) => {
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
       className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all p-6 border border-gray-100 dark:border-gray-700 h-full flex flex-col"
     >
+      {/* Recommended badge */}
+      {showRecommendedBadge && (
+        <div className="flex items-center gap-1.5 mb-3 text-orange-500">
+          <Sparkles className="w-4 h-4" />
+          <span className="text-xs font-medium">Recommended for you</span>
+        </div>
+      )}
+
       <div className="flex justify-between items-start mb-4">
         <Badge variant={domainObj.color || "primary"} className="flex items-center gap-1">
           {domainObj.icon && <span className="material-icons text-sm">{domainObj.icon}</span>}

@@ -1,5 +1,5 @@
 // src/pages/auth/RegisterPage.jsx
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Building,
   AlertCircle,
+  Search
 } from "lucide-react";
 import AuthContext from "../../context/AuthContext";
 
@@ -651,25 +652,95 @@ const StepOne = ({ initialValues, onNext, error }) => {
 // Step 2: Professional Information
 const StepTwo = ({ initialValues, role, onNext, onPrevious, error }) => {
   const formControls = useAnimation();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
 
-  const skillOptions = [
-    "JavaScript",
-    "React",
-    "Node.js",
-    "Python",
-    "Java",
-    "PHP",
-    "HTML/CSS",
-    "UI/UX Design",
-    "Graphic Design",
-    "Content Writing",
-    "Digital Marketing",
-    "SEO",
-    "Data Analysis",
-    "Mobile Development",
-    "WordPress",
-    "DevOps",
-  ];
+  // Organized skill clusters
+  const skillClusters = {
+    'Frontend Development': {
+      icon: '🌐',
+      skills: ['JavaScript', 'React', 'Vue.js', 'Angular', 'HTML/CSS', 'TypeScript', 'Sass/SCSS']
+    },
+    'Backend Development': {
+      icon: '⚙️',
+      skills: ['Node.js', 'Python', 'Java', 'PHP', 'C#', 'Ruby', 'Go', 'Express.js']
+    },
+    'Mobile Development': {
+      icon: '📱',
+      skills: ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Ionic', 'Xamarin']
+    },
+    'Design & Creative': {
+      icon: '🎨',
+      skills: ['UI/UX Design', 'Graphic Design', 'Adobe Photoshop', 'Figma', 'Sketch', 'Illustrator', 'Canva']
+    },
+    'Marketing & Content': {
+      icon: '📈',
+      skills: ['Digital Marketing', 'SEO', 'Content Writing', 'Social Media Marketing', 'Email Marketing', 'Copywriting', 'Google Ads']
+    },
+    'Data & Analytics': {
+      icon: '📊',
+      skills: ['Data Analysis', 'Python', 'R', 'SQL', 'Tableau', 'Power BI', 'Google Analytics', 'Machine Learning']
+    },
+    'DevOps & Cloud': {
+      icon: '☁️',
+      skills: ['DevOps', 'AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Jenkins', 'Azure', 'Google Cloud']
+    },
+    'CMS & Platforms': {
+      icon: '🔧',
+      skills: ['WordPress', 'Shopify', 'Drupal', 'Webflow', 'Squarespace', 'Magento']
+    }
+  };
+
+  // Skill relationships for suggestions
+  const skillRelationships = {
+    'JavaScript': ['React', 'Node.js', 'TypeScript', 'Vue.js', 'Angular'],
+    'React': ['JavaScript', 'TypeScript', 'Node.js', 'React Native'],
+    'Node.js': ['JavaScript', 'Express.js', 'MongoDB', 'DevOps'],
+    'Python': ['Data Analysis', 'Machine Learning', 'Django', 'Flask'],
+    'UI/UX Design': ['Figma', 'Adobe Photoshop', 'Sketch', 'Graphic Design'],
+    'Digital Marketing': ['SEO', 'Google Ads', 'Social Media Marketing', 'Content Writing'],
+    'SEO': ['Digital Marketing', 'Google Analytics', 'Content Writing'],
+    'WordPress': ['PHP', 'HTML/CSS', 'JavaScript']
+  };
+
+  // Get all skills flattened
+  const allSkills = useMemo(() => {
+    return Object.values(skillClusters).flatMap(cluster => cluster.skills);
+  }, []);
+
+  // Filter skills based on search and category
+  const filteredSkills = useMemo(() => {
+    let skills = allSkills;
+    
+    if (activeCategory !== 'all') {
+      skills = skillClusters[activeCategory]?.skills || [];
+    }
+    
+    if (searchTerm) {
+      skills = skills.filter(skill => 
+        skill.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return skills;
+  }, [searchTerm, activeCategory, allSkills]);
+
+  // Get suggested skills based on selected skills
+  const getSuggestedSkills = (selectedSkills) => {
+    const suggestions = new Set();
+    
+    selectedSkills.forEach(skill => {
+      if (skillRelationships[skill]) {
+        skillRelationships[skill].forEach(related => {
+          if (!selectedSkills.includes(related)) {
+            suggestions.add(related);
+          }
+        });
+      }
+    });
+    
+    return Array.from(suggestions).slice(0, 6); // Limit suggestions
+  };
 
   const validationSchema = Yup.object({
     skills:
@@ -708,133 +779,268 @@ const StepTwo = ({ initialValues, role, onNext, onPrevious, error }) => {
         onSubmit={onNext}
         onSubmitError={handleValidationError}
       >
-        {({ isSubmitting, errors, touched, values, setFieldValue }) => (
-          <Form>
-            {/* Skills (for freelancers) */}
-            {role === "freelancer" && (
+        {({ isSubmitting, errors, touched, values, setFieldValue }) => {
+          const suggestedSkills = getSuggestedSkills(values.skills || []);
+          
+          return (
+            <Form>
+              {/* Skills (for freelancers) */}
+              {role === "freelancer" && (
+                <div className="mb-8">
+                  <label className="block text-gray-300 font-medium mb-2">
+                    Skills
+                  </label>
+                  <div className="mb-4 text-sm text-gray-400">
+                    Select the skills you want to offer to potential clients
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <input
+                      type="text"
+                      placeholder="Search skills..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-700 bg-[#0f172a]/50 text-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50"
+                    />
+                    {searchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Category Tabs */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setActiveCategory('all')}
+                      className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                        activeCategory === 'all'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                      }`}
+                    >
+                      All Skills
+                    </button>
+                    {Object.entries(skillClusters).map(([category, data]) => (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => setActiveCategory(category)}
+                        className={`px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1 ${
+                          activeCategory === category
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50'
+                        }`}
+                      >
+                        <span>{data.icon}</span>
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Selected Skills Display */}
+                  {values.skills && values.skills.length > 0 && (
+                    <div className="mb-4 p-4 bg-gray-800/30 rounded-xl border border-gray-700">
+                      <div className="text-sm text-gray-300 mb-2">
+                        Selected Skills ({values.skills.length}):
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {values.skills.map((skill) => (
+                          <motion.span
+                            key={skill}
+                            className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                          >
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSkills = values.skills.filter(s => s !== skill);
+                                setFieldValue("skills", newSkills);
+                              }}
+                              className="ml-2 hover:bg-orange-600 rounded-full p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </motion.span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Suggested Skills */}
+                  {suggestedSkills.length > 0 && (
+                    <div className="mb-4 p-4 bg-blue-900/20 rounded-xl border border-blue-700/30">
+                      <div className="text-sm text-blue-300 mb-2">
+                        💡 Suggested skills based on your selection:
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {suggestedSkills.map((skill) => (
+                          <motion.button
+                            key={skill}
+                            type="button"
+                            onClick={() => {
+                              if (!values.skills.includes(skill)) {
+                                setFieldValue("skills", [...values.skills, skill]);
+                              }
+                            }}
+                            className="px-3 py-1 rounded-full bg-blue-800/30 text-blue-300 border border-blue-600/30 hover:bg-blue-700/40 text-sm transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            + {skill}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Skills Grid */}
+                  <div className="flex flex-wrap gap-2 mb-2 max-h-64 overflow-y-auto p-2">
+                    {filteredSkills.map((skill) => (
+                      <motion.label
+                        key={skill}
+                        className={`
+                          inline-flex items-center px-4 py-2 rounded-full cursor-pointer transition-colors
+                          ${
+                            values.skills?.includes(skill)
+                              ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                              : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:border-gray-600"
+                          }
+                        `}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={values.skills?.includes(skill) || false}
+                          onChange={() => {
+                            const currentSkills = values.skills || [];
+                            const newSkills = currentSkills.includes(skill)
+                              ? currentSkills.filter((s) => s !== skill)
+                              : [...currentSkills, skill];
+                            setFieldValue("skills", newSkills);
+                          }}
+                        />
+                        {skill}
+                      </motion.label>
+                    ))}
+                  </div>
+
+                  {/* No results message */}
+                  {filteredSkills.length === 0 && searchTerm && (
+                    <div className="text-center py-8 text-gray-400">
+                      <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No skills found for "{searchTerm}"</p>
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="text-orange-400 hover:text-orange-300 text-sm mt-2"
+                      >
+                        Clear search
+                      </button>
+                    </div>
+                  )}
+
+                  <ErrorMessage
+                    name="skills"
+                    component={motion.div}
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 text-red-400 text-sm"
+                  />
+                </div>
+              )}
+
+              {/* Bio */}
               <div className="mb-8">
-                <label className="block text-gray-300 font-medium mb-2">
-                  Skills
+                <label
+                  htmlFor="bio"
+                  className="block text-gray-300 font-medium mb-2"
+                >
+                  {role === "freelancer"
+                    ? "Professional Bio"
+                    : "Company Description"}
                 </label>
                 <div className="mb-3 text-sm text-gray-400">
-                  Select the skills you want to offer to potential clients
+                  {role === "freelancer"
+                    ? "Tell clients about your expertise and experience"
+                    : "Tell freelancers about your company and projects"}
                 </div>
-
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {skillOptions.map((skill) => (
-                    <motion.label
-                      key={skill}
-                      className={`
-                        inline-flex items-center px-4 py-2 rounded-full cursor-pointer transition-colors
-                        ${
-                          values.skills.includes(skill)
-                            ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                            : "bg-gray-800/50 text-gray-300 border border-gray-700 hover:border-gray-600"
-                        }
-                      `}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <input
-                        type="checkbox"
-                        className="sr-only"
-                        checked={values.skills.includes(skill)}
-                        onChange={() => {
-                          const newSkills = values.skills.includes(skill)
-                            ? values.skills.filter((s) => s !== skill)
-                            : [...values.skills, skill];
-                          setFieldValue("skills", newSkills);
-                        }}
-                      />
-                      {skill}
-                    </motion.label>
-                  ))}
-                </div>
-
+                <Field
+                  as="textarea"
+                  id="bio"
+                  name="bio"
+                  rows="4"
+                  placeholder={
+                    role === "freelancer"
+                      ? "I am a professional with experience in..."
+                      : "Our company specializes in..."
+                  }
+                  className={`
+                    w-full px-4 py-4 rounded-xl border bg-[#0f172a]/50 text-white
+                    focus:outline-none focus:ring-2 transition-all duration-200
+                    ${
+                      errors.bio && touched.bio
+                        ? "border-red-500/50 focus:ring-red-500/30"
+                        : "border-gray-700 focus:ring-orange-500/30 focus:border-orange-500/50"
+                    }
+                  `}
+                />
                 <ErrorMessage
-                  name="skills"
+                  name="bio"
                   component={motion.div}
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-2 text-red-400 text-sm"
                 />
               </div>
-            )}
 
-            {/* Bio */}
-            <div className="mb-8">
-              <label
-                htmlFor="bio"
-                className="block text-gray-300 font-medium mb-2"
-              >
-                {role === "freelancer"
-                  ? "Professional Bio"
-                  : "Company Description"}
-              </label>
-              <div className="mb-3 text-sm text-gray-400">
-                {role === "freelancer"
-                  ? "Tell clients about your expertise and experience"
-                  : "Tell freelancers about your company and projects"}
+              <div className="flex space-x-4">
+                <motion.button
+                  type="button"
+                  onClick={onPrevious}
+                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-4 px-6 rounded-xl transition-colors flex items-center justify-center border border-gray-700"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ChevronLeft className="mr-2 h-5 w-5" /> Back
+                </motion.button>
+
+                <motion.button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-70 shadow-lg shadow-orange-500/10"
+                  whileHover={{
+                    scale: 1.02,
+                    boxShadow: "0 10px 25px -5px rgba(249, 115, 22, 0.4)",
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Continue <ChevronRight className="ml-2 h-5 w-5" />
+                </motion.button>
               </div>
-              <Field
-                as="textarea"
-                id="bio"
-                name="bio"
-                rows="4"
-                placeholder={
-                  role === "freelancer"
-                    ? "I am a professional with experience in..."
-                    : "Our company specializes in..."
-                }
-                className={`
-                  w-full px-4 py-4 rounded-xl border bg-[#0f172a]/50 text-white
-                  focus:outline-none focus:ring-2 transition-all duration-200
-                  ${
-                    errors.bio && touched.bio
-                      ? "border-red-500/50 focus:ring-red-500/30"
-                      : "border-gray-700 focus:ring-orange-500/30 focus:border-orange-500/50"
-                  }
-                `}
-              />
-              <ErrorMessage
-                name="bio"
-                component={motion.div}
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-2 text-red-400 text-sm"
-              />
-            </div>
-
-            <div className="flex space-x-4">
-              <motion.button
-                type="button"
-                onClick={onPrevious}
-                className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-4 px-6 rounded-xl transition-colors flex items-center justify-center border border-gray-700"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <ChevronLeft className="mr-2 h-5 w-5" /> Back
-              </motion.button>
-
-              <motion.button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-4 px-6 rounded-xl transition-all disabled:opacity-70 shadow-lg shadow-orange-500/10"
-                whileHover={{
-                  scale: 1.02,
-                  boxShadow: "0 10px 25px -5px rgba(249, 115, 22, 0.4)",
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Continue <ChevronRight className="ml-2 h-5 w-5" />
-              </motion.button>
-            </div>
-          </Form>
-        )}
+            </Form>
+          );
+        }}
       </Formik>
     </motion.div>
   );
 };
+
 
 // Step 3: Profile Picture & Completion
 const StepThree = ({

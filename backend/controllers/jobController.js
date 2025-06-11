@@ -1,7 +1,8 @@
 // backend/controllers/jobController.js
-const { Job, User, Transaction, Notification, Escrow, Chat } = require("../models");
+const { Job, User, Transaction, Notification, Escrow, Domain } = require("../models");
 const { createEscrowDeposit, createEscrowRelease } = require("../utils/transactionHelpers");
 const { createAndEmitNotification } = require("../utils/notificationHelper");
+const RecommendationService = require('../utils/recommendationService');
 
 // @desc    Create a new job
 // @route   POST /api/jobs
@@ -452,6 +453,52 @@ const rateFreelancer = async (req, res) => {
   }
 }; 
 
+// @desc    Get recommended jobs for freelancer
+// @route   GET /api/jobs/recommended
+// @access  Private/Freelancer
+const getRecommendedJobs = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 6;
+    const recommendedJobs = await RecommendationService.getRecommendedJobs(
+      req.user._id, 
+      limit
+    );
+
+    res.json({
+      success: true,
+      jobs: recommendedJobs,
+      count: recommendedJobs.length
+    });
+  } catch (error) {
+    console.error('Error getting recommended jobs:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while getting recommendations' 
+    });
+  }
+};
+
+
+const getSuggestedDomains = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const suggestedDomains = await RecommendationService.getSuggestedDomains(
+      user.skills || []
+    );
+
+    res.json({
+      success: true,
+      domains: suggestedDomains
+    });
+  } catch (error) {
+    console.error('Error getting suggested domains:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error while getting domain suggestions' 
+    });
+  }
+};
+
 module.exports = {
   createJob,
   getJobs,
@@ -462,4 +509,6 @@ module.exports = {
   getFreelancerJobs,
   rateFreelancer,
   getAppliedJobs,
+  getRecommendedJobs,
+  getSuggestedDomains
 };  

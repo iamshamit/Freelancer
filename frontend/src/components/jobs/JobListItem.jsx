@@ -1,11 +1,10 @@
-// src/components/jobs/JobListItem.jsx
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Briefcase, DollarSign, Calendar, Users, Clock, User } from 'lucide-react';
+import { Briefcase, DollarSign, Calendar, Users, Clock, User, Sparkles } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import Badge from '../common/Badge';
 
-const JobListItem = ({ job, isEmployer = false }) => {
+const JobListItem = ({ job, isEmployer = false, showRecommendedBadge = false }) => {
   // Handle case where job is undefined or missing properties
   if (!job || typeof job !== 'object') {
     return null;
@@ -50,6 +49,12 @@ const JobListItem = ({ job, isEmployer = false }) => {
       <div className="flex flex-col md:flex-row md:items-center gap-4">
         <div className="flex-grow">
           <div className="flex flex-wrap gap-2 mb-2">
+            {showRecommendedBadge && (
+              <Badge variant="orange" className="flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Recommended
+              </Badge>
+            )}
             <Badge variant={domainObj.color || "primary"} className="flex items-center gap-1">
               {domainObj.name}
             </Badge>

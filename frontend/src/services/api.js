@@ -62,7 +62,8 @@ const api = {
     getEmployerJobs: () => axiosInstance.get('/jobs/employer').then(res => res.data),
     getFreelancerJobs: () => axiosInstance.get('/jobs/freelancer').then(res => res.data),
     rateFreelancer: (id, rating, review) => axiosInstance.post(`/jobs/${id}/rate`, { rating, review }).then(res => res.data),
-    getAppliedJobs: () => axiosInstance.get('/jobs/applied').then(res => res.data)
+    getAppliedJobs: () => axiosInstance.get('/jobs/applied').then(res => res.data),
+    getRecommended: () => axiosInstance.get('/jobs/recommended').then(res => res.data),
   },
 
   // Chat endpoints
@@ -135,6 +136,16 @@ const api = {
     getEscrowBalance: (jobId) => axiosInstance.get(`/jobs/${jobId}/escrow`).then(res => res.data),
     getTransactionDetails: (transactionId) => axiosInstance.get(`/payments/transaction/${transactionId}`).then(res => res.data),
     exportHistory: (format = 'csv') => axiosInstance.get(`/payments/export`, { params: { format },responseType: 'blob'}).then(res => res.data)
+  },
+  
+  search: {
+    global: (params) => axiosInstance.get('/search', { params }).then(res => res.data),
+    suggestions: (query) => axiosInstance.get('/search/suggestions', { params: { query } }).then(res => res.data),
+    freelancers: (params) => axiosInstance.get('/search/freelancers', { params }).then(res => res.data),
+    recommendations: () => axiosInstance.get('/search/recommendations').then(res => res.data),
+    saveSearch: (searchData) => axiosInstance.post('/search/saved', searchData).then(res => res.data),
+    getSavedSearches: () => axiosInstance.get('/search/saved').then(res => res.data),
+    deleteSavedSearch: (searchId) => axiosInstance.delete(`/search/saved/${searchId}`).then(res => res.data)
   }
 };
 

@@ -42,6 +42,10 @@ import NotificationPage from "./pages/notifications/NotificationPage";
 // Ratings Pages
 import RateFreelancerPage from "./pages/ratings/RateFreelancerPage";
 
+// Search Pages
+import SearchResultsPage from './pages/search/SearchResultsPage';
+import FreelancerDirectoryPage from './pages/search/FreelancerDirectoryPage';
+
 // Placeholder for admin
 const AdminDashboard = () => <div>Admin Dashboard</div>;
 
@@ -197,6 +201,22 @@ function App({ darkMode, setDarkMode }) {
               element={
                 <PrivateRoute>
                   <NotificationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/search"
+              element={
+                <PrivateRoute>
+                  <SearchResultsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/freelancers"
+              element={
+                <PrivateRoute>
+                  <FreelancerDirectoryPage />
                 </PrivateRoute>
               }
             />
