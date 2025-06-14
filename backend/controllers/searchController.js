@@ -51,6 +51,9 @@ const globalSearch = async (req, res) => {
     if (type === 'all' || type === 'freelancers') {
       const freelancerFilter = {
         role: 'freelancer',
+        'privacySettings.search.appearInSearch': true,
+        'privacySettings.search.showInDirectory': true,
+        'accountStatus.isActive': true,
         $or: [
           { name: searchRegex },
           { bio: searchRegex },
@@ -59,14 +62,34 @@ const globalSearch = async (req, res) => {
       };
 
       const freelancers = await User.find(freelancerFilter)
-        .select('name email profilePicture bio skills averageRating completedJobs')
+        .select('name email profilePicture bio skills averageRating completedJobs privacySettings')
         .sort({ averageRating: -1, completedJobs: -1 })
         .limit(limit)
         .skip(skip);
 
+      // Filter out sensitive information based on privacy settings
+      const filteredFreelancers = freelancers.map(freelancer => {
+        const publicData = {
+          _id: freelancer._id,
+          name: freelancer.name,
+          profilePicture: freelancer.profilePicture,
+          bio: freelancer.bio,
+          skills: freelancer.skills,
+          averageRating: freelancer.averageRating,
+          completedJobs: freelancer.completedJobs
+        };
+
+        // Only include email if privacy setting allows
+        if (freelancer.privacySettings?.profile?.showEmail) {
+          publicData.email = freelancer.email;
+        }
+
+        return publicData;
+      });
+
       const freelancerCount = await User.countDocuments(freelancerFilter);
       
-      results.freelancers = freelancers;
+      results.freelancers = filteredFreelancers;
       results.totalResults += freelancerCount;
     }
 
@@ -135,7 +158,12 @@ const searchFreelancers = async (req, res) => {
       sortBy = 'rating'
     } = req.query;
 
-    const filter = { role: 'freelancer' };
+    const filter = { 
+      role: 'freelancer',
+      'privacySettings.search.appearInSearch': true,
+      'privacySettings.search.showInDirectory': true,
+      'accountStatus.isActive': true
+    };
 
     // Search filter
     if (search) {
@@ -166,7 +194,7 @@ const searchFreelancers = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const freelancers = await User.find(filter)
-      .select('name email profilePicture bio skills averageRating completedJobs ratings')
+      .select('name email profilePicture bio skills averageRating completedJobs ratings privacySettings')
       .populate({
         path: 'ratings',
         options: { limit: 3, sort: { createdAt: -1 } },
@@ -179,10 +207,31 @@ const searchFreelancers = async (req, res) => {
       .limit(parseInt(limit))
       .skip(skip);
 
+    // Filter freelancers based on privacy settings
+    const filteredFreelancers = freelancers.map(freelancer => {
+      const publicData = {
+        _id: freelancer._id,
+        name: freelancer.name,
+        profilePicture: freelancer.profilePicture,
+        bio: freelancer.bio,
+        skills: freelancer.skills,
+        averageRating: freelancer.averageRating,
+        completedJobs: freelancer.completedJobs,
+        ratings: freelancer.ratings
+      };
+
+      // Only include email if privacy setting allows
+      if (freelancer.privacySettings?.profile?.showEmail) {
+        publicData.email = freelancer.email;
+      }
+
+      return publicData;
+    });
+
     const total = await User.countDocuments(filter);
 
     res.json({
-      freelancers,
+      freelancers: filteredFreelancers,
       page: parseInt(page),
       pages: Math.ceil(total / limit),
       total

@@ -1,6 +1,7 @@
 // backend/controllers/userController.js
 const { User } = require('../models');
 const { generateToken } = require('../config/jwt');
+const { trackLoginActivity } = require('./securityController');
 const axios = require('axios');
 
 // Helper function to upload image to ImgBB
@@ -98,25 +99,51 @@ const registerUser = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, twoFactorCode } = req.body;
 
     // Check for user email
     const user = await User.findOne({ email });
 
-    if (user && (await user.comparePassword(password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        bio: user.bio,
-        skills: user.skills,
-        profilePicture: user.profilePicture,
-        token: generateToken(user._id)
-      });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    // Check if 2FA is enabled
+    if (user.securitySettings?.twoFactorEnabled) {
+      if (!twoFactorCode) {
+        return res.status(200).json({ 
+          requiresTwoFactor: true,
+          message: 'Two-factor authentication code required' 
+        });
+      }
+
+      // Verify 2FA code
+      const speakeasy = require('speakeasy');
+      const verified = speakeasy.totp.verify({
+        secret: user.securitySettings.twoFactorSecret,
+        encoding: 'base32',
+        token: twoFactorCode,
+        window: 2
+      });
+
+      if (!verified) {
+        return res.status(401).json({ message: 'Invalid two-factor authentication code' });
+      }
+    }
+
+    // Track login activity
+    await trackLoginActivity(user._id, req);
+    
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      bio: user.bio,
+      skills: user.skills,
+      profilePicture: user.profilePicture,
+      token: generateToken(user._id)
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

@@ -94,9 +94,14 @@ export const AuthProvider = ({ children }) => {
 
   // Login mutation
   const loginMutation = useMutation({
-    mutationFn: ({ email, password }) => api.user.login(email, password),
+    mutationFn: ({ email, password, twoFactorCode }) => api.user.login(email, password, twoFactorCode),
     onSuccess: (data) => {
       const userData = data.data;
+      // Check if 2FA is required
+      if (userData.requiresTwoFactor) {
+        // Don't dispatch success yet, just return the response
+        return;
+      }
       dispatch({ type: AUTH_ACTIONS.AUTH_SUCCESS, payload: userData });
       localStorage.setItem('user', JSON.stringify(userData));
       api.setAuthToken(userData.token);

@@ -6,7 +6,7 @@ import {
   Menu, X, Home, Briefcase, MessageSquare, Bell, User, 
   Settings, LogOut, Moon, Sun, ChevronDown, Search,
   ChevronLeft, ChevronRight, Plus,
-  FileText, DollarSign
+  FileText, DollarSign, Shield
 } from 'lucide-react';
 import { ErrorBoundary } from 'react-error-boundary';
 import AuthContext from '../../context/AuthContext';
@@ -15,7 +15,7 @@ import NotificationDropdown from '../notifications/NotificationDropdown';
 import useRealTimeNotifications from '../../hooks/useRealTimeNotifications';
 import GlobalSearchBar from '../search/GlobalSearchBar';
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
   const { user, logout } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -61,34 +61,46 @@ const DashboardLayout = ({ children }) => {
     }
   };
 
+  // Check if current path matches any of the given paths
+  const isPathActive = (paths) => {
+    if (Array.isArray(paths)) {
+      return paths.some(path => location.pathname.startsWith(path));
+    }
+    return location.pathname === paths || location.pathname.startsWith(paths);
+  };
+
   // Navigation items based on user role
   const getNavItems = () => {
     const commonItems = [
       { 
         name: 'Dashboard', 
         icon: <Home className="w-5 h-5" />, 
-        path: `/${user?.role}/dashboard` 
+        path: `/${user?.role}/dashboard`,
+        paths: [`/${user?.role}/dashboard`]
       },
       { 
         name: 'Messages', 
         icon: <MessageSquare className="w-5 h-5" />, 
-        path: '/chat' 
+        path: '/chat',
+        paths: ['/chat']
       },
       { 
         name: 'Profile', 
         icon: <User className="w-5 h-5" />, 
-        path: '/profile' 
+        path: '/profile',
+        paths: ['/profile']
       },
       {
         name: 'Payment History',
         icon: <DollarSign className="w-5 h-5" />,
         path: '/payments/history',
+        paths: ['/payments']
       },
       {
         name: 'Notifications',
         icon: <Bell className="w-5 h-5" />,
         path: '/notifications',
-        paths: ['/notifications/settings'] // Example of additional paths
+        paths: ['/notifications']
       }
     ];
 
@@ -96,12 +108,14 @@ const DashboardLayout = ({ children }) => {
       { 
         name: 'Find Jobs', 
         icon: <Briefcase className="w-5 h-5" />, 
-        path: '/jobs' 
+        path: '/jobs',
+        paths: ['/jobs', '/job/']
       },
       {
         name: 'My Applications',
         icon: <FileText className="w-5 h-5" />,
-        path: '/applications'
+        path: '/applications',
+        paths: ['/applications']
       }
     ];
 
@@ -109,18 +123,29 @@ const DashboardLayout = ({ children }) => {
       { 
         name: 'My Jobs', 
         icon: <Briefcase className="w-5 h-5" />, 
-        path: '/employer/jobs' 
+        path: '/employer/jobs',
+        paths: ['/employer/jobs']
       },
       { 
         name: 'Post a Job', 
         icon: <Plus className="w-5 h-5" />, 
-        path: '/employer/post-job' 
+        path: '/employer/post-job',
+        paths: ['/employer/post-job']
       }
     ];
 
-    return user?.role === 'freelancer' 
+    const settingsItem = {
+      name: 'Settings',
+      icon: <Settings className="w-5 h-5" />,
+      path: '/settings/payment',
+      paths: ['/settings']
+    };
+
+    const baseItems = user?.role === 'freelancer' 
       ? [...commonItems.slice(0, 1), ...freelancerItems, ...commonItems.slice(1)]
       : [...commonItems.slice(0, 1), ...employerItems, ...commonItems.slice(1)];
+
+    return [...baseItems, settingsItem];
   };
 
   // Toggle sidebar collapse state
@@ -128,27 +153,6 @@ const DashboardLayout = ({ children }) => {
     setIsSidebarManuallyToggled(true);
     isManuallyToggled.current = true;
     setSidebarCollapsed(!sidebarCollapsed);
-  };
-
-  // Animation variants for sidebar items
-  const sidebarItemVariants = {
-    expanded: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-        delay: 0.1
-      }
-    },
-    collapsed: {
-      opacity: 0,
-      x: -20,
-      transition: {
-        duration: 0.2,
-        ease: "easeIn"
-      }
-    }
   };
 
   return (
@@ -182,8 +186,23 @@ const DashboardLayout = ({ children }) => {
               <GlobalSearchBar />
             </div>
 
-            {/* Right section: Notifications, theme toggle, profile */}
+            {/* Right section: Theme toggle, Notifications, profile */}
             <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              {toggleDarkMode && (
+                <button
+                  onClick={toggleDarkMode}
+                  className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors"
+                  aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {darkMode ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </button>
+              )}
+
               {/* Notifications */}
               <NotificationDropdown />
 
@@ -200,7 +219,9 @@ const DashboardLayout = ({ children }) => {
                       alt="Profile"
                       className="h-8 w-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                     />
-                    <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-white dark:border-gray-800"></div>
+                    <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-gray-800 ${
+                      isConnected ? 'bg-green-500' : 'bg-gray-400'
+                    }`}></div>
                   </div>
                   <span className="hidden md:block font-medium truncate max-w-[100px]">
                     {user?.name || "User"}
@@ -215,31 +236,58 @@ const DashboardLayout = ({ children }) => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 py-1 z-50"
+                      className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 py-1 z-50"
                     >
-                      <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <p className="text-sm font-medium">{user?.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                        <div className="flex items-center mt-1">
+                          <div className={`h-2 w-2 rounded-full mr-2 ${
+                            isConnected ? 'bg-green-500' : 'bg-gray-400'
+                          }`}></div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {isConnected ? 'Online' : 'Offline'}
+                          </span>
+                        </div>
                       </div>
                       
                       <Link
                         to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setProfileDropdownOpen(false)}
                       >
+                        <User className="h-4 w-4 mr-3" />
                         Your Profile
                       </Link>
                       
                       <Link
-                        to="/settings"
-                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        to="/settings/payment"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setProfileDropdownOpen(false)}
                       >
+                        <Settings className="h-4 w-4 mr-3" />
                         Settings
                       </Link>
+
+                      <Link
+                        to="/settings/security"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setProfileDropdownOpen(false)}
+                      >
+                        <Shield className="h-4 w-4 mr-3" />
+                        Security
+                      </Link>
+                      
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                       
                       <button
-                        onClick={logout}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          logout();
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
+                        <LogOut className="h-4 w-4 mr-3" />
                         Sign out
                       </button>
                     </motion.div>
@@ -293,26 +341,52 @@ const DashboardLayout = ({ children }) => {
                 </button>
               </div>
               
+              {/* Mobile Navigation */}
               <nav className="mt-4 px-2 space-y-1">
-                {getNavItems().map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.path}
-                    className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-                      location.pathname === item.path
-                        ? "bg-orange-500 text-white"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {item.icon}
-                    <span className="ml-3">{item.name}</span>
-                  </Link>
-                ))}
+                {getNavItems().map((item) => {
+                  const isActive = isPathActive(item.paths || item.path);
+                  
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.path}
+                      className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-orange-500 text-white shadow-lg"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      }`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      {item.icon}
+                      <span className="ml-3">{item.name}</span>
+                    </Link>
+                  );
+                })}
               </nav>
               
-              <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
+              {/* Mobile Theme Toggle */}
+              {toggleDarkMode && (
+                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                  <button
+                    onClick={() => {
+                      toggleDarkMode();
+                      setSidebarOpen(false);
+                    }}
+                    className="flex items-center w-full px-4 py-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                    <span className="ml-3">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                  </button>
+                </div>
+              )}
+              
+              {/* Mobile Logout */}
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                 <button
-                  onClick={logout}
+                  onClick={() => {
+                    setSidebarOpen(false);
+                    logout();
+                  }}
                   className="flex items-center w-full px-4 py-3 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <LogOut className="h-5 w-5" />
@@ -358,7 +432,7 @@ const DashboardLayout = ({ children }) => {
           <nav className="mt-6 px-3 flex-1 overflow-y-auto overflow-x-hidden">
             <ul className="space-y-2">
               {getNavItems().map((item) => {
-                const isActive = location.pathname === item.path || (item.paths && item.paths.includes(location.pathname));
+                const isActive = isPathActive(item.paths || item.path);
                 
                 return (
                   <li key={item.name}>

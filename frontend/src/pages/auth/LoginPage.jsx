@@ -1,23 +1,20 @@
 // src/pages/auth/LoginPage.jsx
 import { useContext, useEffect, useState, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowLeft, Smartphone } from 'lucide-react';
 import AuthContext from '../../context/AuthContext';
+import api from '../../services/api';
 
-const LoginPage = ({ darkMode, setdarkMode }) => {
+const LoginPage = () => {
   const { login, isAuthLoading, error, clearError } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [loginCredentials, setLoginCredentials] = useState(null);
   const emailInputRef = useRef(null);
   const formControls = useAnimation();
-  
-  // Get redirect path from location state or default to dashboard
-  const from = location.state?.from?.pathname || '/dashboard';
   
   // Clear errors when component unmounts
   useEffect(() => {
@@ -66,12 +63,30 @@ const LoginPage = ({ darkMode, setdarkMode }) => {
       .required('Password is required')
       .min(8, 'Password must be at least 8 characters')
   });
+
+  const twoFactorSchema = Yup.object({
+    twoFactorCode: Yup.string()
+      .required('Two-factor code is required')
+      .matches(/^\d{6}$/, 'Code must be 6 digits')
+  });
   
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
       if (clearError) clearError();
       saveFormData(values);
-      await login(values);
+      
+      // First, try login without 2FA
+      const response = await api.user.login(values.email, values.password);
+      
+      if (response.data.requiresTwoFactor) {
+        // 2FA required, show 2FA form
+        setLoginCredentials(values);
+        setShowTwoFactor(true);
+        setSubmitting(false);
+      } else {
+        // Normal login success
+        await login(values);
+      }
     } catch (err) {
       console.error('Login error:', err);
       
@@ -86,6 +101,29 @@ const LoginPage = ({ darkMode, setdarkMode }) => {
         setFieldError('password', 'Invalid email or password');
       } else if (err.message?.includes('many attempts')) {
         setFieldError('email', 'Too many login attempts. Try again later.');
+      }
+      
+      setSubmitting(false);
+    }
+  };
+
+  const handleTwoFactorSubmit = async (values, { setSubmitting, setFieldError }) => {
+    try {
+      if (clearError) clearError();
+      
+      // Submit with 2FA code
+      const loginData = {
+        email: loginCredentials.email,
+        password: loginCredentials.password,
+        twoFactorCode: values.twoFactorCode
+      };
+      
+      await login(loginData);
+    } catch (err) {
+      console.error('2FA error:', err);
+      
+      if (err.message?.includes('Invalid two-factor')) {
+        setFieldError('twoFactorCode', 'Invalid verification code');
       }
       
       setSubmitting(false);
@@ -164,27 +202,95 @@ const LoginPage = ({ darkMode, setdarkMode }) => {
             style={{ backdropFilter: "blur(16px)" }}
           >
             <AnimatePresence>
-              {loginSuccess ? (
+              {showTwoFactor ? (
                 <motion.div 
-                  className="p-12 flex flex-col items-center justify-center"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
+                  className="p-8"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                  <div className="mb-6 text-center">
+                    <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Smartphone className="h-8 w-8 text-orange-500" />
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">
+                      Two-Factor Authentication
+                    </h2>
+                    <p className="text-gray-400">
+                      Enter the 6-digit code from your authenticator app
+                    </p>
+                  </div>
+
+                  <Formik
+                    initialValues={{ twoFactorCode: '' }}
+                    validationSchema={twoFactorSchema}
+                    onSubmit={handleTwoFactorSubmit}
                   >
-                    <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-                  </motion.div>
-                  <h2 className="text-xl font-bold text-white mb-2">
-                    Login Successful!
-                  </h2>
-                  <p className="text-center text-gray-400">
-                    Redirecting you to your dashboard...
-                  </p>
+                    {({ isSubmitting }) => (
+                      <Form className="space-y-6">
+                        {error && (
+                          <div className="p-4 bg-red-900/30 border border-red-700/50 text-red-400 rounded-lg flex items-center">
+                            <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
+                            <span>{error}</span>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-300">
+                            Verification Code
+                          </label>
+                          <Field name="twoFactorCode">
+                            {({ field, meta }) => (
+                              <div className="relative">
+                                <input
+                                  {...field}
+                                  type="text"
+                                  placeholder="000000"
+                                  maxLength="6"
+                                  className="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-center text-lg font-mono tracking-widest"
+                                  style={{ letterSpacing: '0.5em' }}
+                                />
+                                {meta.touched && meta.error && (
+                                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <AlertCircle className="h-5 w-5 text-red-400" />
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </Field>
+                          <ErrorMessage name="twoFactorCode" component="div" className="text-red-400 text-sm mt-1" />
+                        </div>
+
+                        <div className="space-y-4">
+                          <motion.button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-[#1e293b] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                          >
+                            {isSubmitting ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                Verifying...
+                              </div>
+                            ) : (
+                              'Verify & Sign In'
+                            )}
+                          </motion.button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowTwoFactor(false)}
+                            className="w-full text-gray-400 hover:text-white transition-colors"
+                          >
+                            ← Back to login
+                          </button>
+                        </div>
+                      </Form>
+                    )}
+                  </Formik>
                 </motion.div>
               ) : (
                 <motion.div 

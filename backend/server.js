@@ -16,6 +16,7 @@ const domainRoutes = require('./routes/domainRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const searchRoutes = require('./routes/searchRoutes');
+const securityRoutes = require('./routes/securityRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -143,6 +144,7 @@ app.use('/api/domains', domainRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/security', securityRoutes);
 
 // Test route
 app.get('/', (req, res) => {

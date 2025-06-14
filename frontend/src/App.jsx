@@ -46,6 +46,12 @@ import RateFreelancerPage from "./pages/ratings/RateFreelancerPage";
 import SearchResultsPage from './pages/search/SearchResultsPage';
 import FreelancerDirectoryPage from './pages/search/FreelancerDirectoryPage';
 
+//settings
+import PaymentSettings from "./pages/settings/PaymentSettings";
+import SecuritySettings from "./pages/settings/SecuritySettings";
+import PrivacySettings from "./pages/settings/PrivacySettings";
+
+
 // Placeholder for admin
 const AdminDashboard = () => <div>Admin Dashboard</div>;
 
@@ -164,6 +170,30 @@ function App({ darkMode, setDarkMode }) {
             />
 
             {/* Shared Routes */}
+            <Route
+              path="/settings/payment"
+              element={
+                <PrivateRoute>
+                  <PaymentSettings />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/settings/security"
+              element={
+                <PrivateRoute>
+                  <SecuritySettings />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/settings/privacy"
+              element={
+                <PrivateRoute>
+                  <PrivacySettings />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/profile"
               element={
