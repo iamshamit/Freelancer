@@ -8,9 +8,9 @@ import AuthContext from '../../context/AuthContext';
 import { useChat } from '../../context/ChatContext';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
-import LoadingSpinner from '../common/LoadingSpinner';
 import EmptyState from '../common/EmptyState';
 import SkeletonLoader from '../common/SkeletonLoader';
+import { useSocket } from '../../context/SocketContext';
 
 const ChatBox = ({ chatId, onClose, isFullPage = false }) => {
   const { user } = useContext(AuthContext);
@@ -18,6 +18,7 @@ const ChatBox = ({ chatId, onClose, isFullPage = false }) => {
   const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
+  const { isUserOnline } = useSocket();
 
   // Fetch chat data
   const { data: chat, isLoading, error } = useQuery({
@@ -120,7 +121,9 @@ const ChatBox = ({ chatId, onClose, isFullPage = false }) => {
                 alt={otherUser.name}
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-700"
               />
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800" />
+              <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-800 ${
+                  isUserOnline(otherUser._id) ? 'bg-green-500' : 'bg-gray-500'
+                }`} />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-white">

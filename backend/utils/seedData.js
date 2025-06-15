@@ -153,7 +153,7 @@ const sampleEmployers = [
   {
     name: 'TechCorp Inc',
     email: 'hr@techcorp.com',
-    password: 'password123',
+    password: 'password1234',
     role: 'employer',
     bio: 'Leading technology company seeking talented freelancers for innovative projects.'
   },

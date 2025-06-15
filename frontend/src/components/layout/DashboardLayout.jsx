@@ -12,7 +12,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import AuthContext from '../../context/AuthContext';
 import ErrorFallback from '../common/ErrorFallback';
 import NotificationDropdown from '../notifications/NotificationDropdown';
-import useRealTimeNotifications from '../../hooks/useRealTimeNotifications';
+import { useSocket } from '../../context/SocketContext';
 import GlobalSearchBar from '../search/GlobalSearchBar';
 
 const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
@@ -26,9 +26,17 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
   const isManuallyToggled = useRef(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { isConnected } = useRealTimeNotifications();
+  const { isConnected, isUserOnline } = useSocket();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    console.log('🔍 DashboardLayout - Connection status changed:', {
+      isConnected,
+      userId: user?._id,
+      isCurrentUserOnline: user?._id ? isUserOnline(user._id) : 'no user ID'
+    });
+  }, [isConnected, user?._id, isUserOnline]);
   
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
@@ -220,7 +228,7 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
                       className="h-8 w-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                     />
                     <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-gray-800 ${
-                      isConnected ? 'bg-green-500' : 'bg-gray-400'
+                      isUserOnline(user?._id) ? 'bg-green-500' : 'bg-gray-400'
                     }`}></div>
                   </div>
                   <span className="hidden md:block font-medium truncate max-w-[100px]">

@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext"; // New import
 import { ChatProvider } from "./context/ChatContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import PublicRoute from "./components/auth/PublicRoute";
@@ -51,7 +52,6 @@ import PaymentSettings from "./pages/settings/PaymentSettings";
 import SecuritySettings from "./pages/settings/SecuritySettings";
 import PrivacySettings from "./pages/settings/PrivacySettings";
 
-
 // Placeholder for admin
 const AdminDashboard = () => <div>Admin Dashboard</div>;
 
@@ -59,252 +59,254 @@ function App({ darkMode, setDarkMode }) {
   return (
     <Router>
       <AuthProvider>
-        <ChatProvider>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 5000,
-              style: {
-                background: "#fff",
-                color: "#333",
-              },
-              success: {
+        <SocketProvider> {/* Wrap with SocketProvider */}
+          <ChatProvider>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 5000,
                 style: {
-                  border: "1px solid #0FAA4F",
+                  background: "#fff",
+                  color: "#333",
                 },
-              },
-              error: {
-                style: {
-                  border: "1px solid #964734",
+                success: {
+                  style: {
+                    border: "1px solid #0FAA4F",
+                  },
                 },
-              },
-            }}
-          />
-
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <LoginPage darkMode={darkMode} setDarkMode={setDarkMode} />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PublicRoute>
-                  <RegisterPage />
-                </PublicRoute>
-              }
+                error: {
+                  style: {
+                    border: "1px solid #964734",
+                  },
+                },
+              }}
             />
 
-            {/* Freelancer Routes */}
-            <Route
-              path="/freelancer/dashboard"
-              element={
-                <PrivateRoute role="freelancer">
-                  <FreelancerDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/jobs"
-              element={
-                <PrivateRoute role="freelancer">
-                  <JobListingPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/applications"
-              element={
-                <PrivateRoute role="freelancer">
-                  <ApplicationsPage />
-                </PrivateRoute>
-              }
-            />
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<LandingPage />} />
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <LoginPage darkMode={darkMode} setDarkMode={setDarkMode} />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <RegisterPage />
+                  </PublicRoute>
+                }
+              />
 
-            {/* Employer Routes */}
-            <Route
-              path="/employer/dashboard"
-              element={
-                <PrivateRoute role="employer">
-                  <EmployerDashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/employer/post-job"
-              element={
-                <PrivateRoute role="employer">
-                  <PostJobPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/employer/jobs"
-              element={
-                <PrivateRoute role="employer">
-                  <EmployerJobPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/employer/jobs/:jobId/applicants"
-              element={
-                <PrivateRoute role="employer">
-                  <ApplicantReviewPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/job/:jobId/rate-freelancer"
-              element={
-                <PrivateRoute role="employer">
-                  <RateFreelancerPage />
-                </PrivateRoute>
-              }
-            />
+              {/* Freelancer Routes */}
+              <Route
+                path="/freelancer/dashboard"
+                element={
+                  <PrivateRoute role="freelancer">
+                    <FreelancerDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/jobs"
+                element={
+                  <PrivateRoute role="freelancer">
+                    <JobListingPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/applications"
+                element={
+                  <PrivateRoute role="freelancer">
+                    <ApplicationsPage />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Shared Routes */}
-            <Route
-              path="/settings/payment"
-              element={
-                <PrivateRoute>
-                  <PaymentSettings />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/settings/security"
-              element={
-                <PrivateRoute>
-                  <SecuritySettings />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/settings/privacy"
-              element={
-                <PrivateRoute>
-                  <PrivacySettings />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <ProfilePage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile/:id"
-              element={
-                <PrivateRoute>
-                  <ProfilePage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/job/:id"
-              element={
-                <PrivateRoute>
-                  <JobDetailPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <PrivateRoute>
-                  <NotificationPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/notifications/settings"
-              element={
-                <PrivateRoute>
-                  <NotificationPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/search"
-              element={
-                <PrivateRoute>
-                  <SearchResultsPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/freelancers"
-              element={
-                <PrivateRoute>
-                  <FreelancerDirectoryPage />
-                </PrivateRoute>
-              }
-            />
-            {/* 🆕 Chat Routes (standardized) */}
-            <Route
-              path="/chat"
-              element={
-                <PrivateRoute>
-                  <ChatPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/chat/:id"
-              element={
-                <PrivateRoute>
-                  <ChatPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/chat/archived"
-              element={
-                <PrivateRoute>
-                  <ArchivedChatsPage />
-                </PrivateRoute>
-              }
-            />
+              {/* Employer Routes */}
+              <Route
+                path="/employer/dashboard"
+                element={
+                  <PrivateRoute role="employer">
+                    <EmployerDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/employer/post-job"
+                element={
+                  <PrivateRoute role="employer">
+                    <PostJobPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/employer/jobs"
+                element={
+                  <PrivateRoute role="employer">
+                    <EmployerJobPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/employer/jobs/:jobId/applicants"
+                element={
+                  <PrivateRoute role="employer">
+                    <ApplicantReviewPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/job/:jobId/rate-freelancer"
+                element={
+                  <PrivateRoute role="employer">
+                    <RateFreelancerPage />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Milestones */}
-            <Route
-              path="/job/:jobId/milestones"
-              element={
-                <PrivateRoute>
-                  <MilestonePage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/payments/history"
-              element={
-                <PrivateRoute>
-                  <PaymentHistoryPage />
-                </PrivateRoute>
-              }
-            />
+              {/* Shared Routes */}
+              <Route
+                path="/settings/payment"
+                element={
+                  <PrivateRoute>
+                    <PaymentSettings />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/settings/security"
+                element={
+                  <PrivateRoute>
+                    <SecuritySettings />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/settings/privacy"
+                element={
+                  <PrivateRoute>
+                    <PrivacySettings />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile/:id"
+                element={
+                  <PrivateRoute>
+                    <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/job/:id"
+                element={
+                  <PrivateRoute>
+                    <JobDetailPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <PrivateRoute>
+                    <NotificationPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/notifications/settings"
+                element={
+                  <PrivateRoute>
+                    <NotificationPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/search"
+                element={
+                  <PrivateRoute>
+                    <SearchResultsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/freelancers"
+                element={
+                  <PrivateRoute>
+                    <FreelancerDirectoryPage />
+                  </PrivateRoute>
+                }
+              />
+              {/* 🆕 Chat Routes (standardized) */}
+              <Route
+                path="/chat"
+                element={
+                  <PrivateRoute>
+                    <ChatPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/chat/:id"
+                element={
+                  <PrivateRoute>
+                    <ChatPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/chat/archived"
+                element={
+                  <PrivateRoute>
+                    <ArchivedChatsPage />
+                  </PrivateRoute>
+                }
+              />
 
-            {/* Admin */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <PrivateRoute role="admin">
-                  <AdminDashboard />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </ChatProvider>
+              {/* Milestones */}
+              <Route
+                path="/job/:jobId/milestones"
+                element={
+                  <PrivateRoute>
+                    <MilestonePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/payments/history"
+                element={
+                  <PrivateRoute>
+                    <PaymentHistoryPage />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Admin */}
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <PrivateRoute role="admin">
+                    <AdminDashboard />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </ChatProvider>
+        </SocketProvider>
       </AuthProvider>
     </Router>
   );

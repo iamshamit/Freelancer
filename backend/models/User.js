@@ -143,41 +143,17 @@ const userSchema = new mongoose.Schema({
   }],
   // Privacy & Security Settings
   privacySettings: {
-    profile: {
-      visibility: {
-        type: String,
-        enum: ['public', 'private', 'contacts'],
-        default: 'public'
-      },
-      showEmail: { type: Boolean, default: false },
-      showPhone: { type: Boolean, default: false },
-      showLocation: { type: Boolean, default: true },
-      indexable: { type: Boolean, default: true }
-    },
     activity: {
       showOnlineStatus: { type: Boolean, default: true },
-      showLastSeen: { type: Boolean, default: false },
-      showActiveProjects: { type: Boolean, default: true },
-      showCompletedJobs: { type: Boolean, default: true }
+      showLastSeen: { type: Boolean, default: false }
     },
     messaging: {
-      allowMessagesFrom: {
-        type: String,
-        enum: ['everyone', 'contacts', 'none'],
-        default: 'everyone'
-      },
       showReadReceipts: { type: Boolean, default: true },
       showTypingIndicator: { type: Boolean, default: true }
     },
     search: {
       appearInSearch: { type: Boolean, default: true },
-      showInDirectory: { type: Boolean, default: true },
-      allowContactRequests: { type: Boolean, default: true }
-    },
-    data: {
-      allowAnalytics: { type: Boolean, default: true },
-      allowPersonalization: { type: Boolean, default: true },
-      allowMarketing: { type: Boolean, default: false }
+      showInDirectory: { type: Boolean, default: true }
     }
   },
   // Security Settings
@@ -188,8 +164,6 @@ const userSchema = new mongoose.Schema({
     loginNotifications: { type: Boolean, default: true },
     unusualActivityAlerts: { type: Boolean, default: true },
     passwordChangedAt: Date,
-    lastLoginAt: Date,
-    lastLoginIP: String
   },
   // Account Status
   accountStatus: {
