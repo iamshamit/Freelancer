@@ -28,7 +28,8 @@ const NotificationCenter = () => {
     { id: 'message', label: 'Messages', icon: MessageSquare, count: 0 },
     { id: 'payment', label: 'Payments', icon: DollarSign, count: 0 },
     { id: 'milestone', label: 'Milestones', icon: CheckCircle, count: 0 },
-    { id: 'rating', label: 'Reviews', icon: Star, count: 0 }
+    { id: 'rating', label: 'Reviews', icon: Star, count: 0 },
+    { id: 'account', label: 'Account', icon: AlertCircle, count: 0 }
   ];
 
   const statusFilters = [
@@ -152,7 +153,8 @@ const NotificationCenter = () => {
       'job_completed': { icon: CheckCircle, color: 'orange', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
       'new_message': { icon: MessageSquare, color: 'orange', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
       'new_rating': { icon: Star, color: 'orange', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
-      'milestones_created': { icon: CheckCircle, color: 'orange', bgColor: 'bg-orange-100 dark:bg-orange-900/30' }
+      'milestones_created': { icon: CheckCircle, color: 'orange', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
+      'account_activated': { icon: Check, color: 'green', bgColor: 'bg-green-100 dark:bg-green-900/30'}
     };
     
     return metaMap[type] || { icon: Bell, color: 'orange', bgColor: 'bg-orange-100 dark:bg-orange-900/30' };

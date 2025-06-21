@@ -23,7 +23,9 @@ const notificationSchema = new mongoose.Schema({
       'new_rating',
       'milestones_created',
       'milestone_approval_requested',
-      'milestone_approved'
+      'milestone_approved',
+      'account_suspended',
+      'account_activated'
     ],
     required: true
   },

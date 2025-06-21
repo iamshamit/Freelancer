@@ -18,6 +18,7 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const securityRoutes = require('./routes/securityRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -92,10 +93,7 @@ io.use(async (socket, next) => {
     }
 
     // Check if user account is active
-    if (!user.accountStatus?.isActive) {
-      console.log('❌ Inactive user attempting to connect:', user._id);
-      return next(new Error('Authentication error: Account inactive'));
-    }
+
 
     socket.userId = user._id.toString();
     socket.user = user;
@@ -598,6 +596,7 @@ setInterval(cleanupTypingIndicators, 2 * 60 * 1000); // Every 2 minutes
 setInterval(cleanupOnlineUsers, 10 * 60 * 1000); // Every 10 minutes
 
 // Routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/chats', chatRoutes);

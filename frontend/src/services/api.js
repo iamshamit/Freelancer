@@ -169,6 +169,16 @@ const api = {
     
     // Account deletion
     deleteAccount: (data) => axiosInstance.delete('/security/account', { data }).then(res => res.data)
+  },
+  admin: {
+    getDashboardStats: () => axiosInstance.get('/admin/stats').then(res => res.data),
+    getUsers: (params) => axiosInstance.get('/admin/users', { params }).then(res => res.data),
+    getUserDetails: (id) => axiosInstance.get(`/admin/users/${id}`).then(res => res.data),
+    updateUserStatus: (id, data) => axiosInstance.put(`/admin/users/${id}/status`, data).then(res => res.data),
+    getJobs: (params) => axiosInstance.get('/admin/jobs', { params }).then(res => res.data),
+    removeJob: (id, reason) => axiosInstance.delete(`/admin/jobs/${id}`, { data: { reason } }).then(res => res.data),
+    getAdminActivity: (params) => axiosInstance.get('/admin/activity', { params }).then(res => res.data),
+    getSystemHealth: () => axiosInstance.get('/admin/system').then(res => res.data)
   }
 };
 

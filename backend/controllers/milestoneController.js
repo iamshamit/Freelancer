@@ -17,6 +17,11 @@ const createMilestones = async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
+    const employer = await User.findById(req.user._id);
+    if (employer.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended.' });
+    }
+
     if (job.employer.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: 'Not authorized' });
     }
@@ -112,6 +117,11 @@ const getMilestones = async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
+    const user = await User.findById(req.user._id);
+    if (user.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended.' });
+    }
+
     // Check authorization
     const isAuthorized = 
       job.employer.toString() === req.user._id.toString() ||
@@ -141,6 +151,11 @@ const requestMilestoneApproval = async (req, res) => {
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
+    }
+
+    const freelancer = await User.findById(req.user._id);
+    if (freelancer.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended.' });
     }
 
     if (job.freelancer.toString() !== req.user._id.toString()) {
@@ -212,6 +227,11 @@ const approveMilestone = async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
+    const employer = await User.findById(req.user._id);
+    if (employer.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended.' });
+    }
+
     if (job.employer.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: 'Not authorized' });
     }
@@ -236,7 +256,7 @@ const approveMilestone = async (req, res) => {
     const approvedPercentage = allMilestones
       .filter(m => m.status === 'approved')
       .reduce((sum, m) => sum + m.percentage, 0);
-    
+
     job.milestonePercentage = approvedPercentage;
     job.paymentReleased += milestone.amount;
 
@@ -245,13 +265,13 @@ const approveMilestone = async (req, res) => {
     if (isJobCompleted) {
       job.status = 'completed';
       job.completedAt = Date.now();
-      
+
       // Update freelancer's completed jobs count
       await User.findByIdAndUpdate(job.freelancer, {
         $inc: { completedJobs: 1 }
       });
     }
-    
+
     await job.save();
 
     // Archive chat
@@ -273,16 +293,16 @@ const approveMilestone = async (req, res) => {
       const milestoneIndex = escrow.milestones.findIndex(
         m => m.milestone.toString() === milestoneId
       );
-      
+
       if (milestoneIndex !== -1) {
         escrow.milestones[milestoneIndex].released = true;
         escrow.milestones[milestoneIndex].releasedAt = Date.now();
         escrow.releasedAmount += milestone.amount;
-        
+
         if (isJobCompleted) {
           escrow.status = 'completed';
         }
-        
+
         await escrow.save();
       }
     }
@@ -302,7 +322,7 @@ const approveMilestone = async (req, res) => {
       order: milestone.order + 1,
       status: 'pending'
     });
-    
+
     if (nextMilestone) {
       nextMilestone.status = 'in_progress';
       await nextMilestone.save();
@@ -364,6 +384,11 @@ const rejectMilestone = async (req, res) => {
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
+    }
+
+    const employer = await User.findById(req.user._id);
+    if (employer.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended.' });
     }
 
     if (job.employer.toString() !== req.user._id.toString()) {
@@ -436,6 +461,11 @@ const updateMilestone = async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
+    const employer = await User.findById(req.user._id);
+    if (employer.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended.' });
+    }
+
     if (job.employer.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: 'Not authorized' });
     }
@@ -475,6 +505,11 @@ const deleteMilestone = async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
+    const employer = await User.findById(req.user._id);
+    if (employer.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended.' });
+    }
+
     if (job.employer.toString() !== req.user._id.toString()) {
       return res.status(401).json({ message: 'Not authorized' });
     }
@@ -493,7 +528,7 @@ const deleteMilestone = async (req, res) => {
       job: jobId, 
       _id: { $ne: milestoneId } 
     });
-    
+
     const remainingPercentage = otherMilestones.reduce((sum, m) => sum + m.percentage, 0);
     if (remainingPercentage < 100) {
       return res.status(400).json({ 

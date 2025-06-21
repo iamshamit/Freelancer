@@ -26,7 +26,8 @@ const getUserNotifications = async (req, res) => {
         'message': ['new_message'],
         'payment': ['payment_released'],
         'milestone': ['milestone_completed', 'milestone_approval_requested', 'milestone_approved', 'milestones_created'],
-        'rating': ['new_rating']
+        'rating': ['new_rating'],
+        'account': ['account_suspended']
       };
       
       if (categoryMap[category]) {
@@ -184,7 +185,8 @@ const getCategoryCounts = async (req, res) => {
       'message': ['new_message'],
       'payment': ['payment_released'],
       'milestone': ['milestone_completed', 'milestone_approval_requested', 'milestone_approved', 'milestones_created'],
-      'rating': ['new_rating']
+      'rating': ['new_rating'],
+      'account': ['account_suspended']
     };
 
     const categoryCounts = {
@@ -386,6 +388,10 @@ const sendTestNotification = async (req, res) => {
       'new_rating': {
         title: 'Test: New Review',
         message: 'This is a test notification for new reviews and ratings.'
+      },
+      'account_suspended': { // ADDED
+        title: 'Test: Account Suspended',
+        message: 'This is a test notification for account suspensions.'
       }
     };
 

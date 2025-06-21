@@ -1,5 +1,5 @@
 // backend/controllers/chatController.js
-const { Chat, Job, Notification } = require('../models');
+const { Chat, Job, User } = require('../models');
 const { createAndEmitNotification } = require('../utils/notificationHelper');
 
 // @desc    Create a new chat
@@ -11,7 +11,7 @@ const createChat = async (req, res) => {
 
     // Check if job exists
     const job = await Job.findById(jobId);
-    
+
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }
@@ -22,6 +22,12 @@ const createChat = async (req, res) => {
       job.freelancer.toString() !== req.user._id.toString()
     ) {
       return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // Check if user is suspended
+    const user = await User.findById(req.user._id);
+    if (user.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended' });
     }
 
     // Check if chat already exists
@@ -108,6 +114,23 @@ const sendMessage = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
+    // Check if sender is suspended
+    const sender = await User.findById(req.user._id);
+    if (sender.isSuspended) {
+      return res.status(403).json({ message: 'Your account is suspended' });
+    }
+
+    // Determine recipient
+    const recipientId = chat.employer.toString() === req.user._id.toString()
+      ? chat.freelancer
+      : chat.employer;
+
+    // Check if recipient is suspended
+    const recipient = await User.findById(recipientId);
+    if (recipient.isSuspended) {
+      return res.status(403).json({ message: 'Recipient account is suspended' });
+    }
+
     // Add message
     const message = {
       sender: req.user._id,
@@ -120,15 +143,10 @@ const sendMessage = async (req, res) => {
 
     console.log('Message saved successfully:', message);
 
-    // Determine recipient
-    const recipient = chat.employer.toString() === req.user._id.toString()
-      ? chat.freelancer
-      : chat.employer;
-
     // Create and emit notification using the helper
     const io = req.app.get('io');
     await createAndEmitNotification(io, {
-      recipient,
+      recipient: recipientId,
       sender: req.user._id,
       type: 'new_message',
       title: 'New Message',

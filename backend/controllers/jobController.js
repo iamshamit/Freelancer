@@ -10,7 +10,13 @@ const RecommendationService = require('../utils/recommendationService');
 const createJob = async (req, res) => {
   try {
     const { title, description, domain, budget } = req.body;
-
+    
+    if (req.user.isSuspended) {
+        return res
+          .status(403)
+          .json({ message: "Your account is suspended and you cannot create jobs." });
+    }
+    
     const job = await Job.create({
       title,
       description,
@@ -169,7 +175,11 @@ const applyForJob = async (req, res) => {
         .status(400)
         .json({ message: "This job is no longer open for applications" });
     }
-
+    if (req.user.isSuspended) {
+      return res
+        .status(403)
+        .json({ message: "Your account is suspended and you cannot apply for jobs." });
+    }
     // Check if already applied
     const alreadyApplied = job.applicants.find(
       (applicant) => applicant.freelancer.toString() === req.user._id.toString()
@@ -241,7 +251,23 @@ const selectFreelancer = async (req, res) => {
     }
 
     const freelancerId = req.params.freelancerId;
+    
+    // Check if employer or freelancer is suspended
+    const employer = await User.findById(req.user._id);
+    const freelancer = await User.findById(freelancerId);
 
+    if (employer.isSuspended) {
+      return res
+        .status(403)
+        .json({ message: "Your account is suspended and you cannot select a freelancer." });
+    }
+
+    if (freelancer.isSuspended) {
+      return res
+        .status(403)
+        .json({ message: "This freelancer's account is suspended and cannot be selected." });
+    }
+    
     // Check if freelancer applied
     const applied = job.applicants.find(
       (applicant) => applicant.freelancer.toString() === freelancerId

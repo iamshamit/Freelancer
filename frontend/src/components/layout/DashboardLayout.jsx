@@ -1,4 +1,3 @@
-// src/components/layout/DashboardLayout.jsx
 import { useState, useEffect, useContext, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,7 +5,7 @@ import {
   Menu, X, Home, Briefcase, MessageSquare, Bell, User, 
   Settings, LogOut, Moon, Sun, ChevronDown, Search,
   ChevronLeft, ChevronRight, Plus,
-  FileText, DollarSign, Shield
+  FileText, DollarSign, Shield, BarChart3, Users, Activity
 } from 'lucide-react';
 import { ErrorBoundary } from 'react-error-boundary';
 import AuthContext from '../../context/AuthContext';
@@ -142,6 +141,33 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
       }
     ];
 
+    const adminItems = [
+      {
+        name: 'Admin Dashboard',
+        icon: <BarChart3 className="w-5 h-5" />,
+        path: '/admin/dashboard',
+        paths: ['/admin/dashboard']
+      },
+      {
+        name: 'User Management',
+        icon: <Users className="w-5 h-5" />,
+        path: '/admin/users',
+        paths: ['/admin/users']
+      },
+      {
+        name: 'Job Moderation',
+        icon: <Briefcase className="w-5 h-5" />,
+        path: '/admin/jobs',
+        paths: ['/admin/jobs']
+      },
+      {
+        name: 'Activity Log',
+        icon: <Activity className="w-5 h-5" />,
+        path: '/admin/activity',
+        paths: ['/admin/activity']
+      }
+    ];
+
     const settingsItem = {
       name: 'Settings',
       icon: <Settings className="w-5 h-5" />,
@@ -149,9 +175,16 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
       paths: ['/settings']
     };
 
-    const baseItems = user?.role === 'freelancer' 
-      ? [...commonItems.slice(0, 1), ...freelancerItems, ...commonItems.slice(1)]
-      : [...commonItems.slice(0, 1), ...employerItems, ...commonItems.slice(1)];
+    let baseItems;
+    
+    if (user?.role === 'admin') {
+      // Admin gets all common items plus admin-specific items
+      baseItems = [...commonItems.slice(0, 1), ...adminItems, ...commonItems.slice(1)];
+    } else if (user?.role === 'freelancer') {
+      baseItems = [...commonItems.slice(0, 1), ...freelancerItems, ...commonItems.slice(1)];
+    } else {
+      baseItems = [...commonItems.slice(0, 1), ...employerItems, ...commonItems.slice(1)];
+    }
 
     return [...baseItems, settingsItem];
   };

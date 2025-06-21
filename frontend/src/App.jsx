@@ -1,8 +1,7 @@
-// frontend/src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
-import { SocketProvider } from "./context/SocketContext"; // New import
+import { SocketProvider } from "./context/SocketContext";
 import { ChatProvider } from "./context/ChatContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import PublicRoute from "./components/auth/PublicRoute";
@@ -29,7 +28,7 @@ import PostJobPage from "./pages/jobs/PostJobPage";
 import ApplicantReviewPage from "./pages/applicants/ApplicantReviewPage";
 import ApplicationsPage from "./pages/applicants/ApplicationsPage";
 
-// Chat Pages (renamed from messages to chat)
+// Chat Pages
 import ChatPage from "./pages/chat/ChatPage";
 import ArchivedChatsPage from "./pages/chat/ArchivedChatsPage";
 
@@ -47,19 +46,23 @@ import RateFreelancerPage from "./pages/ratings/RateFreelancerPage";
 import SearchResultsPage from './pages/search/SearchResultsPage';
 import FreelancerDirectoryPage from './pages/search/FreelancerDirectoryPage';
 
-//settings
+// Settings
 import PaymentSettings from "./pages/settings/PaymentSettings";
 import SecuritySettings from "./pages/settings/SecuritySettings";
 import PrivacySettings from "./pages/settings/PrivacySettings";
 
-// Placeholder for admin
-const AdminDashboard = () => <div>Admin Dashboard</div>;
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import JobModeration from "./pages/admin/JobModeration";
+import AdminActivity from "./pages/admin/AdminActivity";
+import UserDetailPage from "./pages/admin/UserDetailPage";
 
 function App({ darkMode, setDarkMode }) {
   return (
     <Router>
       <AuthProvider>
-        <SocketProvider> {/* Wrap with SocketProvider */}
+        <SocketProvider>
           <ChatProvider>
             <Toaster
               position="top-right"
@@ -170,6 +173,48 @@ function App({ darkMode, setDarkMode }) {
                 }
               />
 
+              {/* Admin Routes */}
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <PrivateRoute role="admin">
+                    <AdminDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <PrivateRoute role="admin">
+                    <UserManagement />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/users/:id"
+                element={
+                  <PrivateRoute role="admin">
+                    <UserDetailPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/jobs"
+                element={
+                  <PrivateRoute role="admin">
+                    <JobModeration />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/activity"
+                element={
+                  <PrivateRoute role="admin">
+                    <AdminActivity />
+                  </PrivateRoute>
+                }
+              />
+
               {/* Shared Routes */}
               <Route
                 path="/settings/payment"
@@ -251,7 +296,8 @@ function App({ darkMode, setDarkMode }) {
                   </PrivateRoute>
                 }
               />
-              {/* 🆕 Chat Routes (standardized) */}
+
+              {/* Chat Routes */}
               <Route
                 path="/chat"
                 element={
@@ -291,16 +337,6 @@ function App({ darkMode, setDarkMode }) {
                 element={
                   <PrivateRoute>
                     <PaymentHistoryPage />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Admin */}
-              <Route
-                path="/admin/dashboard"
-                element={
-                  <PrivateRoute role="admin">
-                    <AdminDashboard />
                   </PrivateRoute>
                 }
               />

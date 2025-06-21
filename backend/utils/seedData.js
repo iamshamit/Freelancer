@@ -183,9 +183,6 @@ const seedData = async () => {
     const adminExists = await User.findOne({ email: adminUser.email });
     
     if (!adminExists) {
-      // Hash password and create admin
-      const salt = await bcrypt.genSalt(10);
-      adminUser.password = await bcrypt.hash(adminUser.password, salt);
       await User.create(adminUser);
       console.log('✅ Admin user created');
     } else {

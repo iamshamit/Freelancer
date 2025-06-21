@@ -5,7 +5,7 @@ const adminActionSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: ['job_removal', 'user_suspension', 'dispute_resolution', 'other']
+    enum: ['job_removal', 'user_suspension', 'dispute_resolution', 'other', 'user_activation']
   },
   description: {
     type: String,
