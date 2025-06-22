@@ -111,10 +111,10 @@ const api = {
 
   // Domain endpoints
   domains: {
-  getAll: () => axiosInstance.get('/domains').then(res => res.data),
-  getById: (id) => axiosInstance.get(`/domains/${id}`).then(res => res.data),
-  create: (domainData) => axiosInstance.post('/domains', domainData).then(res => res.data),
-  update: (id, domainData) => axiosInstance.put(`/domains/${id}`, domainData).then(res => res.data)
+    getAll: () => axiosInstance.get('/domains').then(res => res.data),
+    getById: (id) => axiosInstance.get(`/domains/${id}`).then(res => res.data),
+    create: (domainData) => axiosInstance.post('/domains', domainData).then(res => res.data),
+    update: (id, domainData) => axiosInstance.put(`/domains/${id}`, domainData).then(res => res.data)
   },
 
   // Milestone endpoints
@@ -150,24 +150,14 @@ const api = {
 
   // Security & Privacy endpoints
   security: {
-    // Privacy settings
     getPrivacySettings: () => axiosInstance.get('/security/privacy').then(res => res.data),
     updatePrivacySettings: (settings) => axiosInstance.put('/security/privacy', settings).then(res => res.data),
-    
-    // Security settings
     getSecuritySettings: () => axiosInstance.get('/security/settings').then(res => res.data),
     updateSecuritySettings: (settings) => axiosInstance.put('/security/settings', settings).then(res => res.data),
-    
-    // Password management
     changePassword: (passwordData) => axiosInstance.put('/security/password', passwordData).then(res => res.data),
-    
-    // Two-Factor Authentication
     setup2FA: () => axiosInstance.post('/security/2fa/setup').then(res => res.data),
     verify2FA: (token) => axiosInstance.post('/security/2fa/verify', { token }).then(res => res.data),
     disable2FA: (data) => axiosInstance.post('/security/2fa/disable', data).then(res => res.data),
-    
-    
-    // Account deletion
     deleteAccount: (data) => axiosInstance.delete('/security/account', { data }).then(res => res.data)
   },
   admin: {

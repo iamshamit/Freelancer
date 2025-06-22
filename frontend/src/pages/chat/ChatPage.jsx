@@ -9,6 +9,7 @@ import ChatBox from '../../components/chat/ChatBox';
 const ChatPage = () => {
   const { id: chatId } = useParams();
   const navigate = useNavigate();
+  const chatBoxRef = useRef(null); // Add this ref for ChatBox
   
   // Storage keys
   const STORAGE_KEYS = {
@@ -412,7 +413,11 @@ const ChatPage = () => {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="w-full h-full"
             >
-              <ChatBox chatId={chatId} isFullPage={true} />
+              <ChatBox 
+                ref={chatBoxRef} // Pass the ref here
+                chatId={chatId} 
+                isFullPage={true} 
+              />
             </motion.div>
           ) : (
             <motion.div 
