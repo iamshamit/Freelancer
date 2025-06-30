@@ -1,5 +1,5 @@
 // src/pages/dashboard/EmployerDashboard.jsx
-import { useState } from 'react';
+import { useState, useMemo, useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -9,29 +9,97 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
+import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
 
+// Helper function to calculate time ago - defined outside component
+const getTimeAgo = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 1) return '1 day ago';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+  return `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) > 1 ? 's' : ''} ago`;
+};
+
 const EmployerDashboard = () => {
-  // Fetch employer stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['employerStats'],
-    queryFn: () => api.job.getEmployerStats(),
+  const { user } = useContext(AuthContext);
+
+  // Fetch all employer jobs and calculate stats from them
+  const { data: allJobs, isLoading: jobsLoading } = useQuery({
+    queryKey: ['employerJobs'],
+    queryFn: () => api.job.getEmployerJobs(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
-  
-  // Fetch posted jobs
-  const { data: postedJobs, isLoading: jobsLoading } = useQuery({
-    queryKey: ['postedJobs'],
-    queryFn: () => api.job.getPostedJobs(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  
-  // Fetch jobs with applicants
-  const { data: jobsWithApplicants, isLoading: applicantsLoading } = useQuery({
-    queryKey: ['jobsWithApplicants'],
-    queryFn: () => api.job.getJobsWithApplicants(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+
+  // Calculate stats from the jobs data
+  const stats = useMemo(() => {
+    if (!allJobs) return null;
+
+    const postedJobs = allJobs.length;
+    const activeJobs = allJobs.filter(job => job.status === 'assigned').length;
+    const completedJobs = allJobs.filter(job => job.status === 'completed');
+    const totalApplicants = allJobs.reduce((total, job) => total + (job.applicants?.length || 0), 0);
+    const budgetSpent = completedJobs.reduce((total, job) => total + job.budget, 0);
+    
+    // Calculate budget growth (mock calculation - you can replace with real logic)
+    const budgetGrowth = completedJobs.length > 0 ? Math.round((completedJobs.length / postedJobs) * 100) : 0;
+
+    // Get active jobs list - only jobs with status 'assigned'
+    const activeJobsList = allJobs
+      .filter(job => job.status === 'assigned')
+      .map(job => ({
+        ...job,
+        progress: Math.floor(Math.random() * 80) + 10, // Mock progress - replace with real milestone data
+        chatId: `chat_${job._id}` // Mock chat ID - replace with real chat data
+      }));
+
+    return {
+      name: user?.name || 'Employer',
+      postedJobs,
+      activeJobs,
+      totalApplicants,
+      budgetSpent,
+      budgetGrowth,
+      activeJobsList
+    };
+  }, [allJobs, user]);
+
+  // Get recent posted jobs - only show open jobs (not assigned or completed)
+  const postedJobs = useMemo(() => {
+    if (!allJobs) return [];
+    
+    return allJobs
+      .filter(job => job.status === 'open') // Only show open jobs
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5)
+      .map(job => ({
+        ...job,
+        timeAgo: getTimeAgo(job.createdAt),
+        applicantsCount: job.applicants?.length || 0
+      }));
+  }, [allJobs]);
+
+  // Get jobs with applicants - only show open jobs with applicants
+  const jobsWithApplicants = useMemo(() => {
+    if (!allJobs) return [];
+    
+    return allJobs
+      .filter(job => 
+        job.status === 'open' && // Only open jobs
+        job.applicants && 
+        job.applicants.length > 0
+      )
+      .sort((a, b) => b.applicants.length - a.applicants.length)
+      .slice(0, 4)
+      .map(job => ({
+        ...job,
+        applicantsCount: job.applicants.length
+      }));
+  }, [allJobs]);
 
   // Animation variants
   const containerVariants = {
@@ -52,7 +120,7 @@ const EmployerDashboard = () => {
 
   return (
     <DashboardLayout>
-            <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
         {/* Welcome section with post job button */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -69,7 +137,7 @@ const EmployerDashboard = () => {
             </p>
           </div>
           <Link 
-            to="/employer/post-job"
+            to="/jobs/post"
             className="mt-4 sm:mt-0 inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -95,7 +163,7 @@ const EmployerDashboard = () => {
                 <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {jobsLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -118,7 +186,7 @@ const EmployerDashboard = () => {
                 <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {jobsLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -141,7 +209,7 @@ const EmployerDashboard = () => {
                 <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {jobsLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -164,7 +232,7 @@ const EmployerDashboard = () => {
                 <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
               </span>
             </div>
-            {statsLoading ? (
+            {jobsLoading ? (
               <SkeletonLoader type="text" count={1} />
             ) : (
               <>
@@ -177,7 +245,7 @@ const EmployerDashboard = () => {
                     +{stats?.budgetGrowth || 0}%
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 ml-1">
-                    from last month
+                    completion rate
                   </span>
                 </div>
               </>
@@ -185,7 +253,7 @@ const EmployerDashboard = () => {
           </motion.div>
         </motion.div>
 
-        {/* Posted jobs section */}
+        {/* Posted jobs section - Only showing open jobs */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -197,7 +265,7 @@ const EmployerDashboard = () => {
               variants={itemVariants}
               className="text-xl font-bold text-gray-900 dark:text-white"
             >
-              Your Posted Jobs
+              Your Open Jobs
             </motion.h2>
             <motion.div 
               variants={itemVariants}
@@ -212,65 +280,73 @@ const EmployerDashboard = () => {
             </motion.div>
           </div>
 
-          {/* Job listings */}
+          {/* Job listings as list */}
           {jobsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <SkeletonLoader key={i} type="card" />
+                <SkeletonLoader key={i} type="text" count={2} />
               ))}
             </div>
           ) : postedJobs?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {postedJobs.slice(0, 3).map((job) => (
-                <motion.div
-                  key={job._id}
-                  variants={itemVariants}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      job.domain.color === 'blue' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                      job.domain.color === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      job.domain.color === 'purple' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' :
-                      job.domain.color === 'orange' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {job.domain.name}
-                    </span>
-                    <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>${job.budget.toFixed(2)}</span>
+            <motion.div 
+              variants={itemVariants}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+            >
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {postedJobs.map((job, index) => (
+                  <div 
+                    key={job._id}
+                    className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            Open
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            {job.domain?.name || 'General'}
+                          </span>
+                          <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            <span>${job.budget?.toFixed(2) || '0.00'}</span>
+                          </div>
+                        </div>
+                        
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                          {job.title}
+                        </h3>
+                        
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+                          {job.description}
+                        </p>
+                        
+                        <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>Posted {job.timeAgo}</span>
+                          {job.applicantsCount > 0 && (
+                            <>
+                              <span className="mx-2">•</span>
+                              <Users className="h-4 w-4 mr-1" />
+                              <span>{job.applicantsCount} applicant{job.applicantsCount !== 1 ? 's' : ''}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="ml-6">
+                        <Link 
+                          to={`/job/${job._id}`}
+                          className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors font-medium text-sm"
+                        >
+                          View Details
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                  
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
-                    {job.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm line-clamp-2">
-                    {job.description}
-                  </p>
-                  
-                  <div className="flex items-center text-gray-500 dark:text-gray-400 text-xs mb-4">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span>Posted {job.timeAgo}</span>
-                    {job.applicantsCount > 0 && (
-                      <div className="ml-4 flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        <span>{job.applicantsCount} applicant{job.applicantsCount !== 1 ? 's' : ''}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Link 
-                    to={`/employer/jobs/${job._id}`}
-                    className="flex items-center justify-center w-full bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
-                  >
-                    View Details
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </motion.div>
           ) : (
             <motion.div
               variants={itemVariants}
@@ -280,13 +356,13 @@ const EmployerDashboard = () => {
                 <Briefcase className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No jobs posted yet
+                No open jobs
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                You haven't posted any jobs yet. Create your first job posting to find talented freelancers.
+                You don't have any open jobs accepting applications. Post a new job to start receiving applications from freelancers.
               </p>
               <Link 
-                to="/employer/post-job"
+                to="/jobs/post"
                 className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -296,7 +372,7 @@ const EmployerDashboard = () => {
           )}
         </motion.div>
 
-        {/* Jobs with applicants section */}
+        {/* Jobs with applicants section - Only showing open jobs with applicants */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -310,90 +386,69 @@ const EmployerDashboard = () => {
             Jobs with Applicants
           </motion.h2>
 
-          {applicantsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[...Array(2)].map((_, i) => (
-                <SkeletonLoader key={i} type="card" />
+          {jobsLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <SkeletonLoader key={i} type="text" count={2} />
               ))}
             </div>
           ) : jobsWithApplicants?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {jobsWithApplicants.slice(0, 2).map((job) => (
-                <motion.div
-                  key={job._id}
-                  variants={itemVariants}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      job.domain.color === 'blue' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                      job.domain.color === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      job.domain.color === 'purple' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' :
-                      job.domain.color === 'orange' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {job.domain.name}
-                    </span>
-                    <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>${job.budget.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                    {job.title}
-                  </h3>
-                  
-                  <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm mb-4">
-                    <Users className="h-5 w-5 mr-2" />
-                    <span className="font-medium text-gray-900 dark:text-white">{job.applicantsCount}</span>
-                    <span className="ml-1">applicant{job.applicantsCount !== 1 ? 's' : ''}</span>
-                  </div>
-                  
-                  {/* Recent applicants preview */}
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Recent Applicants
-                    </h4>
-                    <div className="space-y-2">
-                      {job.recentApplicants?.slice(0, 2).map((applicant) => (
-                        <div 
-                          key={applicant._id}
-                          className="flex items-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-                        >
-                          <img 
-                            src={applicant.profilePicture || "/default-avatar.png"} 
-                            alt={applicant.name}
-                            className="w-8 h-8 rounded-full object-cover mr-3"
-                          />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {applicant.name}
-                            </p>
-                            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                              <span>{applicant.completedJobs || 0} jobs completed</span>
-                              {applicant.rating > 0 && (
-                                <div className="flex items-center ml-2">
-                                  <span className="text-yellow-500">★</span>
-                                  <span className="ml-1">{applicant.rating.toFixed(1)}</span>
-                                </div>
-                              )}
-                            </div>
+            <motion.div 
+              variants={itemVariants}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+            >
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {jobsWithApplicants.map((job) => (
+                  <div 
+                    key={job._id}
+                    className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            Open
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            {job.domain?.name || 'General'}
+                          </span>
+                          <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            <span>${job.budget?.toFixed(2) || '0.00'}</span>
                           </div>
                         </div>
-                      ))}
+                        
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                          {job.title}
+                        </h3>
+                        
+                        <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm mb-3">
+                          <Users className="h-4 w-4 mr-1" />
+                          <span className="font-medium text-gray-900 dark:text-white">{job.applicantsCount}</span>
+                          <span className="ml-1">applicant{job.applicantsCount !== 1 ? 's' : ''} waiting for review</span>
+                        </div>
+                        
+                        {/* Show applicant count only since freelancer details aren't populated */}
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {job.applicantsCount} freelancer{job.applicantsCount !== 1 ? 's' : ''} applied
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="ml-6">
+                        <Link 
+                          to={`/employer/jobs/${job._id}/applicants`}
+                          className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition-colors font-medium text-sm"
+                        >
+                          Review Applicants
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                  
-                  <Link 
-                    to={`/employer/jobs/${job._id}/applicants`}
-                    className="flex items-center justify-center w-full bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
-                  >
-                    View All Applicants
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </motion.div>
           ) : (
             <motion.div
               variants={itemVariants}
@@ -406,10 +461,10 @@ const EmployerDashboard = () => {
                 No applicants yet
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Your posted jobs don't have any applicants yet. Check back later or post more jobs to attract freelancers.
+                Your open jobs don't have any applicants yet. Check back later or promote your jobs to attract more freelancers.
               </p>
               <Link 
-                to="/employer/post-job"
+                to="/jobs/post"
                 className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -434,7 +489,7 @@ const EmployerDashboard = () => {
           )}
         </motion.div>
 
-        {/* Active jobs section */}
+        {/* Active jobs section - Only showing assigned jobs */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -447,83 +502,88 @@ const EmployerDashboard = () => {
             Active Jobs
           </motion.h2>
 
-          {statsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {jobsLoading ? (
+            <div className="space-y-3">
               {[...Array(2)].map((_, i) => (
-                <SkeletonLoader key={i} type="card" />
+                <SkeletonLoader key={i} type="text" count={2} />
               ))}
             </div>
           ) : stats?.activeJobs > 0 ? (
             <motion.div 
               variants={itemVariants}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
-              {stats.activeJobsList?.slice(0, 2).map((job) => (
-                <div 
-                  key={job._id}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      job.domain.color === 'blue' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                      job.domain.color === 'green' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      job.domain.color === 'purple' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' :
-                      job.domain.color === 'orange' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {job.domain.name}
-                    </span>
-                    <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>${job.budget.toFixed(2)}</span>
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {stats.activeJobsList?.slice(0, 4).map((job) => (
+                  <div 
+                    key={job._id}
+                    className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                            In Progress
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            {job.domain?.name || 'General'}
+                          </span>
+                          <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            <span>${job.budget?.toFixed(2) || '0.00'}</span>
+                          </div>
+                        </div>
+                        
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                          {job.title}
+                        </h3>
+                        
+                        <div className="flex items-center mb-3">
+                          <img 
+                            src={job.freelancer?.profilePicture || "/default-avatar.png"} 
+                            alt={job.freelancer?.name || 'Freelancer'}
+                            className="w-6 h-6 rounded-full object-cover mr-2"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Freelancer: {job.freelancer?.name || 'Unknown'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <div className="flex-1 max-w-xs">
+                            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                              <span>Progress</span>
+                              <span>{job.milestonePercentage}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div 
+                                className="bg-orange-500 h-2 rounded-full transition-all duration-300" 
+                                style={{ width: `${job.milestonePercentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="ml-6 flex space-x-3">
+                        <Link 
+                          to={`/chat/${job.chatId}`}
+                          className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2 px-3 rounded-lg transition-colors font-medium text-sm"
+                        >
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          Chat
+                        </Link>
+                        <Link 
+                          to={`/jobs/${job._id}/milestones`}
+                          className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white py-2 px-3 rounded-lg transition-colors font-medium text-sm"
+                        >
+                          Details
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                  
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                    {job.title}
-                  </h3>
-                  
-                  <div className="flex items-center mb-4">
-                    <img 
-                      src={job.freelancer.profilePicture || "/default-avatar.png"} 
-                      alt={job.freelancer.name}
-                      className="w-8 h-8 rounded-full object-cover mr-2"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">
-                      Freelancer: {job.freelancer.name}
-                    </span>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      <span>Progress</span>
-                      <span>{job.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                      <div 
-                        className="bg-orange-500 h-2.5 rounded-full" 
-                        style={{ width: `${job.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-3">
-                    <Link 
-                      to={`/chat/${job.chatId}`}
-                      className="flex-1 flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
-                    >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Chat
-                    </Link>
-                    <Link 
-                      to={`/jobs/${job._id}/milestones`}
-                      className="flex-1 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
-                    >
-                      Details
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -537,10 +597,10 @@ const EmployerDashboard = () => {
                 No active jobs
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                You don't have any active jobs at the moment. Post jobs and select freelancers to start working.
+                You don't have any jobs in progress. Select freelancers from your job applications to start working together.
               </p>
               <Link 
-                to="/employer/post-job"
+                to="/jobs/post"
                 className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors font-medium"
               >
                 <Plus className="h-5 w-5 mr-2" />

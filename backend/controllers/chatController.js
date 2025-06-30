@@ -153,11 +153,11 @@ const sendMessage = async (req, res) => {
       message: `You have a new message in "${chat.job?.title || 'your project'}"`,
       chat: chat._id,
       job: chat.job?._id,
-      link: `/chats/${chat._id}`,
+      link: `/chat/${chat._id}`,
       actions: [
         {
           label: 'View Message',
-          link: `/chats/${chat._id}`,
+          link: `/chat/${chat._id}`,
           primary: true
         }
       ],

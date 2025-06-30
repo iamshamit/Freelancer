@@ -53,7 +53,7 @@ const createMilestones = async (req, res) => {
         amount: (job.budget * milestones[i].percentage) / 100,
         dueDate: milestones[i].dueDate,
         order: i + 1,
-        status: i === 0 ? 'in_progress' : 'pending' // First milestone starts automatically
+        status: i === 0 ? 'in_progress' : 'pending'
       });
       createdMilestones.push(milestone);
     }
@@ -79,16 +79,16 @@ const createMilestones = async (req, res) => {
       title: 'Project Milestones Created',
       message: `Milestones have been created for your project: ${job.title}`,
       job: jobId,
-      link: `/jobs/${jobId}/milestones`,
+      link: `/job/${jobId}/milestones`,
       actions: [
         {
           label: 'View Milestones',
-          link: `/jobs/${jobId}/milestones`,
+          link: `/job/${jobId}/milestones`,
           primary: true
         },
         {
           label: 'View Job',
-          link: `/jobs/${jobId}`,
+          link: `/job/${jobId}`,
           primary: false
         }
       ],
@@ -185,16 +185,16 @@ const requestMilestoneApproval = async (req, res) => {
       title: 'Milestone Approval Requested',
       message: `${req.user.name} has requested approval for milestone: ${milestone.title}`,
       job: jobId,
-      link: `/jobs/${jobId}/milestones`,
+      link: `/job/${jobId}/milestones`,
       actions: [
         {
           label: 'Review Milestone',
-          link: `/jobs/${jobId}/milestones/${milestoneId}`,
+          link: `/job/${jobId}/milestones`,
           primary: true
         },
         {
           label: 'View All Milestones',
-          link: `/jobs/${jobId}/milestones`,
+          link: `/job/${jobId}/milestones`,
           primary: false
         }
       ],
@@ -337,16 +337,16 @@ const approveMilestone = async (req, res) => {
       title: isJobCompleted ? 'Final Milestone Approved!' : 'Milestone Approved',
       message: `Milestone "${milestone.title}" has been approved and payment of $${milestone.amount.toFixed(2)} has been released.${isJobCompleted ? ' Congratulations on completing the project!' : ''}`,
       job: jobId,
-      link: `/jobs/${jobId}`,
+      link: `/job/${jobId}`,
       actions: [
         {
           label: isJobCompleted ? 'View Completed Job' : 'Continue Project',
-          link: `/jobs/${jobId}`,
+          link: `/job/${jobId}`,
           primary: true
         },
         {
           label: 'View Transactions',
-          link: `/transactions`,
+          link: `/payments/history`,
           primary: false
         }
       ],
@@ -419,16 +419,16 @@ const rejectMilestone = async (req, res) => {
       title: 'Milestone Needs Revision',
       message: `Milestone "${milestone.title}" requires revision. Please review the feedback and resubmit.`,
       job: jobId,
-      link: `/jobs/${jobId}/milestones/${milestoneId}`,
+      link: `/job/${jobId}/milestones`,
       actions: [
         {
           label: 'View Feedback',
-          link: `/jobs/${jobId}/milestones/${milestoneId}`,
+          link: `/job/${jobId}/milestones`,
           primary: true
         },
         {
           label: 'Contact Employer',
-          link: `/chats/job/${jobId}`,
+          link: `/chat`,
           primary: false
         }
       ],

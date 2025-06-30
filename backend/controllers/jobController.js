@@ -204,16 +204,16 @@ const applyForJob = async (req, res) => {
       title: "New Job Application",
       message: `${req.user.name} has applied for your job: ${job.title}`,
       job: job._id,
-      link: `/jobs/${job._id}/applications`,
+      link: `/employer/jobs/${job._id}/applicants`,
       actions: [
         {
           label: 'View Application',
-          link: `/jobs/${job._id}/applications`,
+          link: `/employer/jobs/${job._id}/applicants`,
           primary: true
         },
         {
           label: 'View Job',
-          link: `/jobs/${job._id}`,
+          link: `/job/${job._id}`,
           primary: false
         }
       ],
@@ -301,17 +301,12 @@ const selectFreelancer = async (req, res) => {
       title: "Job Assignment",
       message: `Congratulations! You have been selected for the job: ${job.title}`,
       job: job._id,
-      link: `/jobs/${job._id}`,
+      link: `/job/${job._id}`,
       actions: [
         {
           label: 'View Job Details',
-          link: `/jobs/${job._id}`,
+          link: `/job/${job._id}`,
           primary: true
-        },
-        {
-          label: 'Start Chat',
-          link: `/chats/job/${job._id}`,
-          primary: false
         }
       ],
       metadata: {
@@ -336,6 +331,7 @@ const getEmployerJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ employer: req.user._id })
       .populate("freelancer", "name profilePicture")
+      .populate("applicants.freelancer", "name profilePicture")
       .sort({ createdAt: -1 });
 
     res.json(jobs);
@@ -450,16 +446,16 @@ const rateFreelancer = async (req, res) => {
       title: "New Review Received",
       message: `You received a ${rating}-star rating from ${req.user.name} for: ${job.title}`,
       job: job._id,
-      link: `/profile/reviews`,
+      link: `/profile`,
       actions: [
         {
           label: 'View Review',
-          link: `/profile/reviews`,
+          link: `/profile`,
           primary: true
         },
         {
           label: 'View Job',
-          link: `/jobs/${job._id}`,
+          link: `/job/${job._id}`,
           primary: false
         }
       ],
@@ -537,4 +533,4 @@ module.exports = {
   getAppliedJobs,
   getRecommendedJobs,
   getSuggestedDomains
-};  
+};

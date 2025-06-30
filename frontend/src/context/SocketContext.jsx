@@ -12,7 +12,8 @@ export const SocketProvider = ({ children }) => {
   const queryClient = useQueryClient();
   const socketRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
-  const initializingRef = useRef(false);
+  const isInitializingRef = useRef(false);
+  const isConnectedRef = useRef(false);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [connectionAttempts, setConnectionAttempts] = useState(0);
@@ -20,17 +21,21 @@ export const SocketProvider = ({ children }) => {
 
   // Cleanup function
   const cleanup = useCallback(() => {
-    if (socketRef.current) {
-      console.log('🧹 Cleaning up socket connection');
-      socketRef.current.removeAllListeners();
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
+    console.log('🧹 Cleaning up socket connection');
+    
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    initializingRef.current = false;
+    
+    if (socketRef.current) {
+      socketRef.current.removeAllListeners();
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+    
+    isInitializingRef.current = false;
+    isConnectedRef.current = false;
     setIsConnected(false);
     setOnlineUsers(new Set());
     setConnectionAttempts(0);
@@ -38,25 +43,29 @@ export const SocketProvider = ({ children }) => {
 
   // Initialize socket connection
   const initializeSocket = useCallback(() => {
+    // Prevent multiple simultaneous initializations
+    if (isInitializingRef.current) {
+      console.log('⚠️ Socket initialization already in progress, skipping...');
+      return;
+    }
+
     if (!user || !user.token) {
       console.log('❌ Cannot initialize socket: No user or token');
       return;
     }
 
-    if (initializingRef.current) {
-      console.log('⚠️ Socket initialization already in progress');
+    // Check if already connected
+    if (socketRef.current && socketRef.current.connected && isConnectedRef.current) {
+      console.log('✅ Socket already connected, skipping initialization');
       return;
     }
 
-    if (socketRef.current && socketRef.current.connected) {
-      console.log('✅ Socket already connected');
-      return;
-    }
+    isInitializingRef.current = true;
+    console.log('🔄 Initializing socket connection for user:', user.name, user._id);
 
-    initializingRef.current = true;
-
-    // Clean up existing socket
+    // Clean up existing socket first
     if (socketRef.current) {
+      console.log('🧹 Cleaning up existing socket before creating new one');
       socketRef.current.removeAllListeners();
       socketRef.current.disconnect();
       socketRef.current = null;
@@ -65,11 +74,7 @@ export const SocketProvider = ({ children }) => {
     const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const SOCKET_URL = API_BASE.replace('/api', '');
     
-    console.log('🔄 Initializing socket connection...', { 
-      SOCKET_URL, 
-      userId: user._id,
-      attempt: connectionAttempts + 1
-    });
+    console.log('🚀 Creating new socket connection to:', SOCKET_URL);
     
     socketRef.current = io(SOCKET_URL, {
       withCredentials: true,
@@ -78,18 +83,22 @@ export const SocketProvider = ({ children }) => {
       },
       transports: ['websocket', 'polling'],
       timeout: 20000,
-      reconnection: false, // Handle reconnection manually
-      forceNew: true
+      reconnection: true, // Let socket.io handle reconnection
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      // Remove forceNew to prevent multiple connections
     });
 
     const socket = socketRef.current;
 
     // Connection events
     socket.on('connect', () => {
-      console.log('✅ Socket connected, ID:', socket.id);
+      console.log('✅ Socket connected successfully, ID:', socket.id);
+      isInitializingRef.current = false;
+      isConnectedRef.current = true;
       setIsConnected(true);
       setConnectionAttempts(0);
-      initializingRef.current = false;
       
       // Join notification and chat rooms
       socket.emit('join-notifications', user._id);
@@ -99,43 +108,26 @@ export const SocketProvider = ({ children }) => {
 
     socket.on('disconnect', (reason) => {
       console.log('❌ Socket disconnected:', reason);
+      isConnectedRef.current = false;
       setIsConnected(false);
-      initializingRef.current = false;
-
-      // Handle reconnection
-      if (reason !== 'io client disconnect' && connectionAttempts < maxReconnectAttempts) {
-        const delay = Math.min(1000 * Math.pow(2, connectionAttempts), 10000);
-        console.log(`🔄 Reconnecting in ${delay}ms (attempt ${connectionAttempts + 1}/${maxReconnectAttempts})`);
-        
-        reconnectTimeoutRef.current = setTimeout(() => {
-          setConnectionAttempts(prev => prev + 1);
-          initializeSocket();
-        }, delay);
-      }
+      isInitializingRef.current = false;
     });
 
     socket.on('connect_error', (error) => {
       console.error('❌ Socket connection error:', error);
+      isConnectedRef.current = false;
       setIsConnected(false);
-      initializingRef.current = false;
-
-      if (connectionAttempts < maxReconnectAttempts) {
-        const delay = Math.min(1000 * Math.pow(2, connectionAttempts), 10000);
-        console.log(`🔄 Retrying connection in ${delay}ms`);
-        
-        reconnectTimeoutRef.current = setTimeout(() => {
-          setConnectionAttempts(prev => prev + 1);
-          initializeSocket();
-        }, delay);
-      }
+      isInitializingRef.current = false;
     });
 
-    // Handle force disconnect
+    // Handle force disconnect from server
     socket.on('force-disconnect', (reason) => {
-      console.log('🔄 Force disconnect:', reason);
-      cleanup();
-      // Reconnect after cleanup
-      setTimeout(initializeSocket, 1000);
+      console.log('🔄 Force disconnect received:', reason);
+      isConnectedRef.current = false;
+      setIsConnected(false);
+      isInitializingRef.current = false;
+      
+      // Let socket.io handle the reconnection
     });
 
     // Online/Offline status events
@@ -154,13 +146,13 @@ export const SocketProvider = ({ children }) => {
     });
 
     socket.on('online-users-list', (users) => {
-      console.log('📋 Online users:', users);
+      console.log('📋 Online users received:', users.length, 'users');
       setOnlineUsers(new Set(users));
     });
 
     // Notification events with immediate UI updates
     socket.on('new-notification', (notification) => {
-      console.log('🔔 New notification received:', notification);
+      console.log('🔔 New notification received:', notification.title);
       
       // Immediately invalidate queries for instant badge update
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -196,7 +188,7 @@ export const SocketProvider = ({ children }) => {
 
     // Chat events
     socket.on('newMessage', (data) => {
-      console.log('💬 New message:', data);
+      console.log('💬 New message received');
       queryClient.invalidateQueries(['chat', data.chatId]);
       
       if (data.sender !== user._id) {
@@ -213,9 +205,9 @@ export const SocketProvider = ({ children }) => {
       toast.error(`Connection error: ${error.message || 'Unknown error'}`);
     });
 
-  }, [user, connectionAttempts, cleanup, queryClient]);
+  }, [user, queryClient]); // Simplified dependencies
 
-  // Effect to handle user changes
+  // Effect to handle user changes - FIXED DEPENDENCIES
   useEffect(() => {
     if (!user || !user.token) {
       console.log('❌ No user or token, cleaning up socket');
@@ -223,16 +215,15 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    console.log('✅ User available, initializing socket');
+    console.log('👤 User changed, initializing socket for:', user.name);
     initializeSocket();
 
+    // Cleanup on unmount or user change
     return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      // Don't cleanup on unmount to maintain connection
+      console.log('🧹 Component unmounting or user changed, cleaning up...');
+      cleanup();
     };
-  }, [user?._id, user?.token, initializeSocket, cleanup]);
+  }, [user?._id, user?.token]); // Only depend on user ID and token
 
   // Notification helper functions
   const showNotificationToast = useCallback((notification) => {
@@ -255,7 +246,6 @@ export const SocketProvider = ({ children }) => {
       return iconMap[type] || iconMap.default;
     };
 
-    // Use regular toast for better reliability
     toast((t) => (
       <div className="flex items-start space-x-3 max-w-sm">
         <div className="flex-shrink-0">
@@ -279,13 +269,6 @@ export const SocketProvider = ({ children }) => {
     ), {
       duration: 5000,
       position: 'top-right',
-      style: {
-        background: 'var(--toast-bg, #ffffff)',
-        color: 'var(--toast-color, #333333)',
-        border: '1px solid var(--toast-border, #e5e7eb)',
-        borderRadius: '8px',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-      }
     });
   }, []);
 
@@ -369,19 +352,6 @@ export const SocketProvider = ({ children }) => {
     return onlineUsers.has(userId);
   }, [onlineUsers]);
 
-  // Connection health check
-  useEffect(() => {
-    if (!socketRef.current) return;
-
-    const healthCheck = setInterval(() => {
-      if (socketRef.current?.connected) {
-        socketRef.current.emit('ping');
-      }
-    }, 30000); // Every 30 seconds
-
-    return () => clearInterval(healthCheck);
-  }, []);
-
   const value = {
     socket: socketRef.current,
     isConnected,
@@ -394,7 +364,8 @@ export const SocketProvider = ({ children }) => {
     markNotificationAsRead,
     markAllNotificationsAsRead,
     // Chat functions
-    sendMessage,    joinChat,
+    sendMessage,
+    joinChat,
     leaveChat
   };
 
