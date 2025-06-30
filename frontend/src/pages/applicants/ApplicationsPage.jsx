@@ -16,7 +16,8 @@ import {
   ChevronRight,
   User,
   MessageSquare,
-  Target, // Added for milestones icon
+  Target,
+  Award, // Added for completed status
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import DashboardLayout from "../../components/layout/DashboardLayout";
@@ -57,34 +58,53 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
   // Filter applications based on status and search query
   const getFilteredApplications = () => {
     if (!applications || !Array.isArray(applications)) return [];
-
+  
     return applications.filter((app) => {
       // Skip invalid applications
       if (!app) return false;
-
+  
       // Filter by status
-      if (activeFilter !== "all" && app.applicationStatus !== activeFilter) {
-        return false;
+      if (activeFilter === "completed") {
+        // Show only completed jobs
+        if (app.status !== "completed") return false;
+      } else {
+        // For all other filters (including "all") - exclude completed jobs
+        if (app.status === "completed") return false;
+        
+        // Then filter by application status for specific filters
+        if (activeFilter !== "all" && app.applicationStatus !== activeFilter) {
+          return false;
+        }
       }
-
+  
       // Filter by search query
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const title = app.title?.toLowerCase() || "";
         const employerName = app.employer?.name?.toLowerCase() || "";
-
+  
         return title.includes(query) || employerName.includes(query);
       }
-
+  
       return true;
     });
   };
-
+  
   const filteredApplications = getFilteredApplications();
 
   // Get status badge variant and icon
-  const getStatusInfo = (status) => {
-    switch (status) {
+  const getStatusInfo = (application) => {
+    // Check if the job is completed first
+    if (application.status === "completed") {
+      return {
+        variant: "success",
+        icon: <Award className="h-4 w-4 mr-1" />,
+        text: "Completed",
+      };
+    }
+
+    // Otherwise, use application status
+    switch (application.applicationStatus) {
       case "accepted":
         return {
           variant: "success",
@@ -214,6 +234,16 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                   Accepted
                 </button>
                 <button
+                  onClick={() => setActiveFilter("completed")}
+                  className={`px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+                    activeFilter === "completed"
+                      ? "bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-lg"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md"
+                  }`}
+                >
+                  Completed
+                </button>
+                <button
                   onClick={() => setActiveFilter("rejected")}
                   className={`px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 ${
                     activeFilter === "rejected"
@@ -282,10 +312,10 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                   // Skip invalid applications
                   if (!application) return null;
 
-                  const { variant, icon, text } = getStatusInfo(
-                    application.applicationStatus,
-                  );
+                  const { variant, icon, text } = getStatusInfo(application);
                   const appliedAt = application.applicants?.[0]?.appliedAt;
+                  const completedAt = application.completedAt;
+                  const isCompleted = application.status === "completed";
 
                   return (
                     <motion.div
@@ -357,6 +387,16 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                               </span>
                             </div>
                           )}
+
+                          {isCompleted && completedAt && (
+                            <div className="flex items-center text-green-600 dark:text-green-400">
+                              <Award className="h-4 w-4 mr-1" />
+                              <span>
+                                Completed{" "}
+                                {formatDistanceToNow(new Date(completedAt))} ago
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="mt-3 line-clamp-2 text-gray-600 dark:text-gray-400 text-sm mb-4">
@@ -364,7 +404,35 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                         </div>
 
                         <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
-                          {application.applicationStatus === "accepted" && (
+                          {isCompleted ? (
+                            // Show different actions for completed jobs
+                            <div className="flex flex-wrap gap-2">
+                              <Link to={`/job/${application._id}/milestones`}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center border-green-500/50 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 hover:border-green-500 transition-all duration-200 transform hover:scale-105"
+                                >
+                                  <Target className="h-4 w-4 mr-2" />
+                                  View Milestones
+                                </Button>
+                              </Link>
+                              
+                              {!application.isRatedByEmployer && (
+                                <Link to={`/rate-employer/${application._id}`}>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex items-center border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-500 transition-all duration-200 transform hover:scale-105"
+                                  >
+                                    <Award className="h-4 w-4 mr-2" />
+                                    Rate Employer
+                                  </Button>
+                                </Link>
+                              )}
+                            </div>
+                          ) : application.applicationStatus === "accepted" ? (
+                            // Show actions for accepted (but not completed) jobs
                             <div className="flex flex-wrap gap-2">
                               <Button
                                 onClick={() =>
@@ -391,7 +459,7 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                                 </Button>
                               </Link>
                             </div>
-                          )}
+                          ) : null}
 
                           <Link
                             to={`/job/${application._id}`}

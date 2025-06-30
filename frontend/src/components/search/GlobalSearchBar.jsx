@@ -66,6 +66,20 @@ const GlobalSearchBar = ({ className = "" }) => {
     handleSearch(suggestion.text);
   };
 
+  // Handle delete recent search
+  const handleDeleteRecentSearch = (searchToDelete, event) => {
+    event.stopPropagation(); // Prevent triggering the search
+    const updatedSearches = recentSearches.filter(search => search !== searchToDelete);
+    setRecentSearches(updatedSearches);
+    localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
+  };
+
+  // Clear all recent searches
+  const handleClearAllRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('recentSearches');
+  };
+
   const getIcon = (type) => {
     switch (type) {
       case 'job':
@@ -147,20 +161,39 @@ const GlobalSearchBar = ({ className = "" }) => {
             {/* Recent searches */}
             {!query && recentSearches.length > 0 && (
               <div className="p-2">
-                <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  Recent Searches
+                <div className="px-3 py-2 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                    Recent Searches
+                  </span>
+                  <button
+                    onClick={handleClearAllRecentSearches}
+                    className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  >
+                    Clear all
+                  </button>
                 </div>
                 {recentSearches.map((search, index) => (
-                  <button
+                  <div
                     key={index}
-                    onClick={() => handleSearch(search)}
-                    className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors text-left"
+                    className="group flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                   >
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="flex-1 text-gray-700 dark:text-gray-200">
-                      {search}
-                    </span>
-                  </button>
+                    <button
+                      onClick={() => handleSearch(search)}
+                      className="flex-1 px-3 py-2 flex items-center gap-3 text-left"
+                    >
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="flex-1 text-gray-700 dark:text-gray-200">
+                        {search}
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteRecentSearch(search, e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 mr-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-all"
+                      title="Remove from recent searches"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
