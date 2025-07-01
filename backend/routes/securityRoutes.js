@@ -10,7 +10,10 @@ const {
   setup2FA,
   verify2FA,
   disable2FA,
-  deleteAccount
+  deleteAccount,
+  regenerateBackupCodes,
+  getBackupCodesCount,
+  viewBackupCodes
 } = require('../controllers/securityController');
 const { protect } = require('../middleware/auth');
 
@@ -29,6 +32,9 @@ router.put('/password', protect, changePassword);
 router.post('/2fa/setup', protect, setup2FA);
 router.post('/2fa/verify', protect, verify2FA);
 router.post('/2fa/disable', protect, disable2FA);
+router.post('/2fa/backup-codes/regenerate', protect, regenerateBackupCodes);
+router.get('/2fa/backup-codes/count', protect, getBackupCodesCount);
+router.post('/2fa/backup-codes/view', protect, viewBackupCodes);
 
 // Account deletion
 router.delete('/account', protect, deleteAccount);

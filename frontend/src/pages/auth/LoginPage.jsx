@@ -1,20 +1,22 @@
 // src/pages/auth/LoginPage.jsx
 import { useContext, useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowLeft, Smartphone } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff, ArrowLeft, Smartphone, Key } from 'lucide-react';
 import AuthContext from '../../context/AuthContext';
 import api from '../../services/api';
 
 const LoginPage = () => {
-  const { login, isAuthLoading, error, clearError } = useContext(AuthContext);
+  const { login, isAuthLoading, error, clearError, setAuthenticatedUser } = useContext(AuthContext);
   const [showPassword, setShowPassword] = useState(false);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [loginCredentials, setLoginCredentials] = useState(null);
+  const [useBackupCode, setUseBackupCode] = useState(false);
   const emailInputRef = useRef(null);
   const formControls = useAnimation();
+  const navigate = useNavigate();
   
   // Clear errors when component unmounts
   useEffect(() => {
@@ -66,8 +68,21 @@ const LoginPage = () => {
 
   const twoFactorSchema = Yup.object({
     twoFactorCode: Yup.string()
-      .required('Two-factor code is required')
-      .matches(/^\d{6}$/, 'Code must be 6 digits')
+      .when('$useBackupCode', {
+        is: false,
+        then: (schema) => schema
+          .required('Two-factor code is required')
+          .matches(/^\d{6}$/, 'Code must be 6 digits'),
+        otherwise: (schema) => schema.notRequired()
+      }),
+    backupCode: Yup.string()
+      .when('$useBackupCode', {
+        is: true,
+        then: (schema) => schema
+          .required('Backup code is required')
+          .matches(/^[A-Fa-f0-9]{8}$/, 'Backup code must be 8 characters'),
+        otherwise: (schema) => schema.notRequired()
+      })
   });
   
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
@@ -111,19 +126,55 @@ const LoginPage = () => {
     try {
       if (clearError) clearError();
       
-      // Submit with 2FA code
+      // Submit with 2FA code or backup code
       const loginData = {
         email: loginCredentials.email,
-        password: loginCredentials.password,
-        twoFactorCode: values.twoFactorCode
+        password: loginCredentials.password
       };
+  
+      if (useBackupCode && values.backupCode) {
+        loginData.backupCode = values.backupCode.replace(/\s/g, '').toUpperCase();
+      } else if (!useBackupCode && values.twoFactorCode) {
+        loginData.twoFactorCode = values.twoFactorCode;
+      } else {
+        setFieldError(useBackupCode ? 'backupCode' : 'twoFactorCode', 'Please enter the required code');
+        setSubmitting(false);
+        return;
+      }
       
-      await login(loginData);
+      console.log('Making API call with:', { 
+        email: loginData.email, 
+        hasPassword: !!loginData.password,
+        twoFactorCode: loginData.twoFactorCode,
+        backupCode: loginData.backupCode 
+      });
+      
+      const response = await api.user.login(
+        loginData.email, 
+        loginData.password, 
+        loginData.twoFactorCode, 
+        loginData.backupCode
+      );
+  
+      console.log('API response received:', response);
+  
+      if (response.data.token) {
+        // Use the AuthContext helper method for proper state management
+        setAuthenticatedUser(response.data);
+      } else {
+        console.log('No token in response');
+        setFieldError(useBackupCode ? 'backupCode' : 'twoFactorCode', 'Login failed - no token received');
+        setSubmitting(false);
+      }
     } catch (err) {
       console.error('2FA error:', err);
       
-      if (err.message?.includes('Invalid two-factor')) {
+      if (err.response?.data?.message?.includes('Invalid backup code')) {
+        setFieldError('backupCode', 'Invalid or already used backup code');
+      } else if (err.response?.data?.message?.includes('Invalid two-factor')) {
         setFieldError('twoFactorCode', 'Invalid verification code');
+      } else {
+        setFieldError(useBackupCode ? 'backupCode' : 'twoFactorCode', 'Authentication failed');
       }
       
       setSubmitting(false);
@@ -204,6 +255,7 @@ const LoginPage = () => {
             <AnimatePresence>
               {showTwoFactor ? (
                 <motion.div 
+                  key="twofactor"
                   className="p-8"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -212,22 +264,34 @@ const LoginPage = () => {
                 >
                   <div className="mb-6 text-center">
                     <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Smartphone className="h-8 w-8 text-orange-500" />
+                      {useBackupCode ? (
+                        <Key className="h-8 w-8 text-orange-500" />
+                      ) : (
+                        <Smartphone className="h-8 w-8 text-orange-500" />
+                      )}
                     </div>
                     <h2 className="text-xl font-bold text-white mb-2">
-                      Two-Factor Authentication
+                      {useBackupCode ? 'Enter Backup Code' : 'Two-Factor Authentication'}
                     </h2>
                     <p className="text-gray-400">
-                      Enter the 6-digit code from your authenticator app
+                      {useBackupCode 
+                        ? 'Enter one of your 8-character backup codes'
+                        : 'Enter the 6-digit code from your authenticator app'
+                      }
                     </p>
                   </div>
 
                   <Formik
-                    initialValues={{ twoFactorCode: '' }}
+                    key={useBackupCode ? 'backup' : 'totp'} // Force re-render on toggle
+                    initialValues={{ 
+                      twoFactorCode: '', 
+                      backupCode: '' 
+                    }}
                     validationSchema={twoFactorSchema}
+                    context={{ useBackupCode }}
                     onSubmit={handleTwoFactorSubmit}
                   >
-                    {({ isSubmitting }) => (
+                    {({ isSubmitting, setFieldValue, values }) => (
                       <Form className="space-y-6">
                         {error && (
                           <div className="p-4 bg-red-900/30 border border-red-700/50 text-red-400 rounded-lg flex items-center">
@@ -236,31 +300,68 @@ const LoginPage = () => {
                           </div>
                         )}
 
-                        <div className="space-y-2">
-                          <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-300">
-                            Verification Code
-                          </label>
-                          <Field name="twoFactorCode">
-                            {({ field, meta }) => (
-                              <div className="relative">
-                                <input
-                                  {...field}
-                                  type="text"
-                                  placeholder="000000"
-                                  maxLength="6"
-                                  className="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-center text-lg font-mono tracking-widest"
-                                  style={{ letterSpacing: '0.5em' }}
-                                />
-                                {meta.touched && meta.error && (
-                                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                    <AlertCircle className="h-5 w-5 text-red-400" />
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </Field>
-                          <ErrorMessage name="twoFactorCode" component="div" className="text-red-400 text-sm mt-1" />
-                        </div>
+                        {useBackupCode ? (
+                          <div className="space-y-2">
+                            <label htmlFor="backupCode" className="block text-sm font-medium text-gray-300">
+                              Backup Code
+                            </label>
+                            <Field name="backupCode">
+                              {({ field, meta }) => (
+                                <div className="relative">
+                                  <input
+                                    {...field}
+                                    type="text"
+                                    placeholder="XXXXXXXX"
+                                    maxLength="8"
+                                    value={field.value || ''}
+                                    className="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-center text-lg font-mono tracking-widest uppercase"
+                                    onChange={(e) => {
+                                      const value = e.target.value.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+                                      setFieldValue('backupCode', value);
+                                    }}
+                                  />
+                                  {meta.touched && meta.error && (
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                      <AlertCircle className="h-5 w-5 text-red-400" />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </Field>
+                            <ErrorMessage name="backupCode" component="div" className="text-red-400 text-sm mt-1" />
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-300">
+                              Verification Code
+                            </label>
+                            <Field name="twoFactorCode">
+                              {({ field, meta }) => (
+                                <div className="relative">
+                                  <input
+                                    {...field}
+                                    type="text"
+                                    placeholder="000000"
+                                    maxLength="6"
+                                    value={field.value || ''}
+                                    className="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-center text-lg font-mono tracking-widest"
+                                    style={{ letterSpacing: '0.5em' }}
+                                    onChange={(e) => {
+                                      const value = e.target.value.replace(/[^0-9]/g, '');
+                                      setFieldValue('twoFactorCode', value);
+                                    }}
+                                  />
+                                  {meta.touched && meta.error && (
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                      <AlertCircle className="h-5 w-5 text-red-400" />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </Field>
+                            <ErrorMessage name="twoFactorCode" component="div" className="text-red-400 text-sm mt-1" />
+                          </div>
+                        )}
 
                         <div className="space-y-4">
                           <motion.button
@@ -280,9 +381,30 @@ const LoginPage = () => {
                             )}
                           </motion.button>
 
+                          <div className="text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUseBackupCode(!useBackupCode);
+                                // Clear form errors when switching
+                                if (clearError) clearError();
+                              }}
+                              className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
+                            >
+                              {useBackupCode 
+                                ? '← Use authenticator app instead' 
+                                : 'Use backup code instead'
+                              }
+                            </button>
+                          </div>
+
                           <button
                             type="button"
-                            onClick={() => setShowTwoFactor(false)}
+                            onClick={() => {
+                              setShowTwoFactor(false);
+                              setUseBackupCode(false);
+                              if (clearError) clearError();
+                            }}
                             className="w-full text-gray-400 hover:text-white transition-colors"
                           >
                             ← Back to login
@@ -294,6 +416,7 @@ const LoginPage = () => {
                 </motion.div>
               ) : (
                 <motion.div 
+                  key="login"
                   className="p-8"
                   animate={formControls}
                 >
@@ -431,7 +554,7 @@ const LoginPage = () => {
                           
                           <motion.div
                             initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
+                            animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.2 }}
                           >
                             <motion.button
@@ -447,7 +570,7 @@ const LoginPage = () => {
                             >
                               {isAuthLoading || isSubmitting ? (
                                 <div className="flex items-center justify-center">
-                                                                    <svg className="animate-spin mr-2 h-5 w-5 text-white" viewBox="0 0 24 24">
+                                  <svg className="animate-spin mr-2 h-5 w-5 text-white" viewBox="0 0 24 24">
                                     <circle 
                                       className="opacity-25" 
                                       cx="12" 

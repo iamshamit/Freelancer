@@ -74,6 +74,23 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, []);
 
+  // Helper method to set authenticated user directly (for 2FA success)
+  const setAuthenticatedUser = useCallback((userData) => {
+    dispatch({ type: AUTH_ACTIONS.AUTH_SUCCESS, payload: userData });
+    localStorage.setItem('user', JSON.stringify(userData));
+    api.setAuthToken(userData.token);
+    toast.success('Login successful!');
+    
+    // Navigate to appropriate dashboard
+    const redirectPath = userData.role === 'admin' 
+      ? '/admin/dashboard' 
+      : userData.role === 'employer' 
+        ? '/employer/dashboard' 
+        : '/freelancer/dashboard';
+    
+    navigate(redirectPath);
+  }, [navigate]);
+
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: (userData) => api.user.register(userData),
@@ -206,6 +223,7 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         uploadProfilePicture,
         clearError,
+        setAuthenticatedUser, // Add the new helper method
         isAuthLoading
       }}
     >

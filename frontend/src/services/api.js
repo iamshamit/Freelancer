@@ -44,7 +44,7 @@ const api = {
   // User endpoints
   user: {
     register: (userData) => axiosInstance.post('/users', userData),
-    login: (email, password, twoFactorCode) => axiosInstance.post('/users/login', { email, password, twoFactorCode }),
+    login: (email, password, twoFactorCode, backupCode) => axiosInstance.post('/users/login', { email, password, twoFactorCode, backupCode }),
     getProfile: () => axiosInstance.get('/users/profile').then(res => res.data),
     updateProfile: (userData) => axiosInstance.put('/users/profile', userData),
     uploadProfilePicture: (imageData) => axiosInstance.post('/users/profile/picture', { image: imageData }),
@@ -158,8 +158,12 @@ const api = {
     setup2FA: () => axiosInstance.post('/security/2fa/setup').then(res => res.data),
     verify2FA: (token) => axiosInstance.post('/security/2fa/verify', { token }).then(res => res.data),
     disable2FA: (data) => axiosInstance.post('/security/2fa/disable', data).then(res => res.data),
+    regenerateBackupCodes: (password) => axiosInstance.post('/security/2fa/backup-codes/regenerate', { password }).then(res => res.data),
+    getBackupCodesCount: () => axiosInstance.get('/security/2fa/backup-codes/count').then(res => res.data),
+    viewBackupCodes: (password) => axiosInstance.post('/security/2fa/backup-codes/view', { password }).then(res => res.data),
     deleteAccount: (data) => axiosInstance.delete('/security/account', { data }).then(res => res.data)
   },
+  
   admin: {
     getDashboardStats: () => axiosInstance.get('/admin/stats').then(res => res.data),
     getUsers: (params) => axiosInstance.get('/admin/users', { params }).then(res => res.data),

@@ -1,4 +1,3 @@
-// backend/server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -70,6 +69,7 @@ app.set('io', io);
 const onlineUsers = new Map(); // userId -> { socketId, lastSeen, status, user }
 const typingUsers = new Map(); // chatId -> Set of { userId, userName, startTime }
 const userSockets = new Map(); // userId -> socketId for quick lookup
+const heartbeatIntervals = new Map(); // socketId -> intervalId
 
 // Socket.io authentication middleware
 io.use(async (socket, next) => {
@@ -91,9 +91,6 @@ io.use(async (socket, next) => {
       console.log('❌ User not found for token:', decoded.id);
       return next(new Error('Authentication error: User not found'));
     }
-
-    // Check if user account is active
-
 
     socket.userId = user._id.toString();
     socket.user = user;
@@ -118,18 +115,30 @@ io.on('connection', async (socket) => {
   
   console.log(`🔌 User connected: ${user.name} (${userId}) - Socket ID: ${socket.id}`);
   
-  // Check if user already has an active connection
+  // Improved multiple connection handling
   const existingSocketId = userSockets.get(userId);
   if (existingSocketId && existingSocketId !== socket.id) {
     const existingSocket = io.sockets.sockets.get(existingSocketId);
     if (existingSocket && existingSocket.connected) {
-      console.log(`⚠️ User ${userId} already has active connection (${existingSocketId}), gracefully replacing...`);
+      console.log(`⚠️ Replacing existing connection for user ${userId} (old: ${existingSocketId}, new: ${socket.id})`);
+      
+      // Clean up heartbeat for old socket
+      const oldHeartbeat = heartbeatIntervals.get(existingSocketId);
+      if (oldHeartbeat) {
+        clearInterval(oldHeartbeat);
+        heartbeatIntervals.delete(existingSocketId);
+      }
+      
+      // Clean up immediately without waiting
+      existingSocket.removeAllListeners();
       existingSocket.emit('force-disconnect', 'New connection established');
       existingSocket.disconnect(true);
-      // Clean up the old socket from userSockets map
+      
+      // Remove from maps immediately
       userSockets.delete(userId);
+      
       // Small delay to ensure cleanup
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
   
@@ -147,6 +156,25 @@ io.on('connection', async (socket) => {
       profilePicture: user.profilePicture
     }
   });
+  
+  // Set up heartbeat for connection health monitoring
+  const heartbeatInterval = setInterval(() => {
+    if (socket.connected) {
+      socket.emit('heartbeat');
+      
+      // Update last seen
+      const userInfo = onlineUsers.get(userId);
+      if (userInfo) {
+        userInfo.lastSeen = new Date();
+        onlineUsers.set(userId, userInfo);
+      }
+    } else {
+      clearInterval(heartbeatInterval);
+      heartbeatIntervals.delete(socket.id);
+    }
+  }, 30000); // Every 30 seconds
+  
+  heartbeatIntervals.set(socket.id, heartbeatInterval);
   
   // Join user to their personal notification room
   socket.join(`user_${userId}`);
@@ -166,6 +194,15 @@ io.on('connection', async (socket) => {
   });
   socket.emit('online-users-list', onlineUserIds);
   console.log(`📋 Sent online users list to ${userId}:`, onlineUserIds.length, 'users');
+  
+  // Handle heartbeat response
+  socket.on('heartbeat-response', () => {
+    const userInfo = onlineUsers.get(userId);
+    if (userInfo) {
+      userInfo.lastSeen = new Date();
+      onlineUsers.set(userId, userInfo);
+    }
+  });
   
   // Handle joining user's general room (legacy support)
   socket.on('join', (joinUserId) => {
@@ -479,54 +516,75 @@ io.on('connection', async (socket) => {
     }
   });
   
-  // Handle disconnect
+  // Improved disconnect handler
   socket.on('disconnect', (reason) => {
     console.log(`🔌 User disconnected: ${user.name} (${userId}) - Socket ID: ${socket.id} - Reason: ${reason}`);
     
-    // Only clean up if this is the current socket for the user
+    // Clear heartbeat interval
+    const heartbeat = heartbeatIntervals.get(socket.id);
+    if (heartbeat) {
+      clearInterval(heartbeat);
+      heartbeatIntervals.delete(socket.id);
+    }
+    
+    // Check if this socket is still the current one
     const currentSocketId = userSockets.get(userId);
-    if (currentSocketId === socket.id) {
-      console.log(`🧹 Cleaning up connection for user ${userId}`);
+    const isCurrentSocket = currentSocketId === socket.id;
+    
+    if (isCurrentSocket) {
+      console.log(`🧹 Cleaning up current connection for user ${userId}`);
       
-      // Update user's last seen and remove from online users
+      // Clean up user data
       const userInfo = onlineUsers.get(userId);
       if (userInfo) {
         userInfo.lastSeen = new Date();
         userInfo.status = 'offline';
       }
       
-      // Remove user from online users and socket mapping
       onlineUsers.delete(userId);
       userSockets.delete(userId);
-    
-    // Remove user from all typing indicators
-    for (const [chatId, chatTypingUsers] of typingUsers.entries()) {
-      const userTyping = Array.from(chatTypingUsers).find(t => t.userId === userId);
-      if (userTyping) {
-        chatTypingUsers.delete(userTyping);
-        
-        // Notify others that user stopped typing
-        socket.to(`chat_${chatId}`).emit('typing-stop', {
-          chatId,
-          userId
-        });
-        
-        console.log(`⌨️ User ${userId} stopped typing in chat ${chatId} (disconnected)`);
-        
-        if (chatTypingUsers.size === 0) {
-          typingUsers.delete(chatId);
+      
+      // Clean up typing indicators
+      for (const [chatId, chatTypingUsers] of typingUsers.entries()) {
+        const userTyping = Array.from(chatTypingUsers).find(t => t.userId === userId);
+        if (userTyping) {
+          chatTypingUsers.delete(userTyping);
+          
+          // Notify others that user stopped typing
+          socket.to(`chat_${chatId}`).emit('typing-stop', {
+            chatId,
+            userId
+          });
+          
+          console.log(`⌨️ User ${userId} stopped typing in chat ${chatId} (disconnected)`);
+          
+          if (chatTypingUsers.size === 0) {
+            typingUsers.delete(chatId);
+          }
         }
       }
-    }
-    
-      // Broadcast that user is offline (only if privacy settings allow)
+      
+      // Broadcast offline status
       const showOnlineStatus = user.privacySettings?.activity?.showOnlineStatus !== false;
       if (showOnlineStatus) {
         socket.broadcast.emit('user-offline', userId);
         console.log(`🔴 Broadcasting user ${userId} is offline`);
       }
     } else {
-      console.log(`⚠️ Socket ${socket.id} disconnected but was not the current socket for user ${userId}`);
+      // This is an old socket, just log it and clean up minimal data
+      console.log(`⚠️ Old socket ${socket.id} disconnected for user ${userId} (current: ${currentSocketId || 'none'})`);
+      
+      // Still clean up any typing indicators for this specific socket
+      for (const [chatId, chatTypingUsers] of typingUsers.entries()) {
+        const userTyping = Array.from(chatTypingUsers).find(t => t.userId === userId);
+        if (userTyping) {
+          chatTypingUsers.delete(userTyping);
+          socket.to(`chat_${chatId}`).emit('typing-stop', { chatId, userId });
+          if (chatTypingUsers.size === 0) {
+            typingUsers.delete(chatId);
+          }
+        }
+      }
     }
   });
   
@@ -574,19 +632,47 @@ const cleanupTypingIndicators = () => {
   }
 };
 
-// Cleanup function for stale online users (run every 10 minutes)
+// Improved cleanup function for stale online users
 const cleanupOnlineUsers = () => {
   const now = new Date();
   const OFFLINE_TIMEOUT = 10 * 60 * 1000; // 10 minutes
   
   for (const [userId, userInfo] of onlineUsers.entries()) {
     if ((now - userInfo.lastSeen) > OFFLINE_TIMEOUT) {
-      console.log(`🧹 Cleaning up stale online user: ${userId}`);
-      onlineUsers.delete(userId);
-      userSockets.delete(userId);
-      
-      // Broadcast that user is offline
-      io.emit('user-offline', userId);
+      // Check if socket still exists and is connected
+      const socket = io.sockets.sockets.get(userInfo.socketId);
+      if (!socket || !socket.connected) {
+        console.log(`🧹 Cleaning up stale online user: ${userId}`);
+        onlineUsers.delete(userId);
+        userSockets.delete(userId);
+        
+        // Clean up heartbeat if exists
+        const heartbeat = heartbeatIntervals.get(userInfo.socketId);
+        if (heartbeat) {
+          clearInterval(heartbeat);
+          heartbeatIntervals.delete(userInfo.socketId);
+        }
+        
+        // Broadcast that user is offline
+        io.emit('user-offline', userId);
+      } else {
+        // Socket is still connected, update last seen
+        console.log(`🔄 Socket still connected for user ${userId}, updating last seen`);
+        userInfo.lastSeen = new Date();
+        onlineUsers.set(userId, userInfo);
+      }
+    }
+  }
+};
+
+// Cleanup function for orphaned heartbeat intervals
+const cleanupHeartbeats = () => {
+  for (const [socketId, intervalId] of heartbeatIntervals.entries()) {
+    const socket = io.sockets.sockets.get(socketId);
+    if (!socket || !socket.connected) {
+      console.log(`🧹 Cleaning up orphaned heartbeat for socket ${socketId}`);
+      clearInterval(intervalId);
+      heartbeatIntervals.delete(socketId);
     }
   }
 };
@@ -594,6 +680,7 @@ const cleanupOnlineUsers = () => {
 // Set up cleanup intervals
 setInterval(cleanupTypingIndicators, 2 * 60 * 1000); // Every 2 minutes
 setInterval(cleanupOnlineUsers, 10 * 60 * 1000); // Every 10 minutes
+setInterval(cleanupHeartbeats, 15 * 60 * 1000); // Every 15 minutes
 
 // Routes
 app.use('/api/admin', adminRoutes);
@@ -615,7 +702,8 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     onlineUsers: onlineUsers.size,
-    activeChats: typingUsers.size
+    activeChats: typingUsers.size,
+    activeHeartbeats: heartbeatIntervals.size
   });
 });
 
@@ -628,12 +716,35 @@ app.get('/', (req, res) => {
   });
 });
 
-// Socket status endpoint for debugging
+// Enhanced socket status endpoint for debugging
 app.get('/api/socket/status', (req, res) => {
+  const socketDetails = {};
+  
+  // Get detailed socket information
+  for (const [socketId, socket] of io.sockets.sockets.entries()) {
+    socketDetails[socketId] = {
+      connected: socket.connected,
+      userId: socket.userId || 'unknown',
+      userName: socket.user?.name || 'unknown',
+      rooms: Array.from(socket.rooms)
+    };
+  }
+  
   res.json({
-    onlineUsers: Array.from(onlineUsers.keys()),
-    typingChats: Array.from(typingUsers.keys()),
-    connectedSockets: io.sockets.sockets.size
+    onlineUsers: Array.from(onlineUsers.entries()).map(([userId, info]) => ({
+      userId,
+      socketId: info.socketId,
+      lastSeen: info.lastSeen,
+      status: info.status,
+      userName: info.user.name
+    })),
+    typingChats: Array.from(typingUsers.entries()).map(([chatId, users]) => ({
+      chatId,
+      users: Array.from(users)
+    })),
+    connectedSockets: io.sockets.sockets.size,
+    activeHeartbeats: heartbeatIntervals.size,
+    socketDetails
   });
 });
 
@@ -683,6 +794,7 @@ const startServer = async () => {
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
       console.log(`📡 Socket.io server ready for connections`);
       console.log(`🔔 Real-time features enabled`);
+      console.log(`💓 Heartbeat monitoring active`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -693,6 +805,13 @@ const startServer = async () => {
 // Graceful shutdown
 const gracefulShutdown = (signal) => {
   console.log(`\n📴 ${signal} received. Starting graceful shutdown...`);
+  
+  // Clear all intervals
+  console.log('🧹 Clearing all intervals...');
+  for (const intervalId of heartbeatIntervals.values()) {
+    clearInterval(intervalId);
+  }
+  heartbeatIntervals.clear();
   
   // Close HTTP server
   server.close(() => {

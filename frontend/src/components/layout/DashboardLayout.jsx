@@ -693,7 +693,7 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
           resetKeys={[location.pathname]}
         >
           <motion.div
-            key={location.pathname}
+            key={location.pathname.startsWith('/chat') ? '/chat' : location.pathname}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

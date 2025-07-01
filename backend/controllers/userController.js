@@ -99,7 +99,9 @@ const registerUser = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
   try {
-    const { email, password, twoFactorCode } = req.body;
+    const { email, password, twoFactorCode, backupCode } = req.body;
+
+    console.log('Login attempt:', { email, hasPassword: !!password, twoFactorCode, backupCode });
 
     // Check for user email
     const user = await User.findOne({ email });
@@ -110,24 +112,59 @@ const loginUser = async (req, res) => {
 
     // Check if 2FA is enabled
     if (user.securitySettings?.twoFactorEnabled) {
-      if (!twoFactorCode) {
+      if (!twoFactorCode && !backupCode) {
         return res.status(200).json({ 
           requiresTwoFactor: true,
           message: 'Two-factor authentication code required' 
         });
       }
 
-      // Verify 2FA code
-      const speakeasy = require('speakeasy');
-      const verified = speakeasy.totp.verify({
-        secret: user.securitySettings.twoFactorSecret,
-        encoding: 'base32',
-        token: twoFactorCode,
-        window: 2
-      });
+      let verified = false;
+
+      // Check backup code first (if provided)
+      if (backupCode) {
+        console.log('Checking backup code:', backupCode);
+        console.log('User backup codes:', user.securitySettings.backupCodes);
+        
+        const cleanBackupCode = backupCode.toUpperCase().replace(/\s/g, '');
+        console.log('Clean backup code:', cleanBackupCode);
+        
+        const backupCodeIndex = user.securitySettings.backupCodes?.findIndex(
+          code => {
+            console.log('Comparing:', code, 'with', cleanBackupCode);
+            return code === cleanBackupCode;
+          }
+        );
+        
+        console.log('Backup code index found:', backupCodeIndex);
+        
+        if (backupCodeIndex !== -1) {
+          // Remove the used backup code
+          user.securitySettings.backupCodes.splice(backupCodeIndex, 1);
+          await user.save();
+          verified = true;
+          console.log('Backup code verified successfully');
+        } else {
+          console.log('Backup code not found in user codes');
+        }
+      }
+      // Check TOTP code if backup code not provided or invalid
+      else if (twoFactorCode) {
+        const speakeasy = require('speakeasy');
+        verified = speakeasy.totp.verify({
+          secret: user.securitySettings.twoFactorSecret,
+          encoding: 'base32',
+          token: twoFactorCode,
+          window: 2
+        });
+      }
 
       if (!verified) {
-        return res.status(401).json({ message: 'Invalid two-factor authentication code' });
+        return res.status(401).json({ 
+          message: backupCode 
+            ? 'Invalid backup code' 
+            : 'Invalid two-factor authentication code' 
+        });
       }
     }
 
@@ -145,7 +182,7 @@ const loginUser = async (req, res) => {
       token: generateToken(user._id)
     });
   } catch (error) {
-    console.error(error);
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

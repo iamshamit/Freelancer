@@ -422,7 +422,109 @@ const trackLoginActivity = async (userId, req) => {
   }
 };
 
+// @desc    Regenerate backup codes
+// @route   POST /api/security/2fa/backup-codes/regenerate
+// @access  Private
+const regenerateBackupCodes = async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ message: 'Please provide your password' });
+    }
 
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect password' });
+    }
+
+    if (!user.securitySettings?.twoFactorEnabled) {
+      return res.status(400).json({ message: '2FA is not enabled' });
+    }
+
+    // Generate new backup codes
+    const backupCodes = [];
+    for (let i = 0; i < 8; i++) {
+      backupCodes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
+    }
+
+    // Update backup codes
+    user.securitySettings.backupCodes = backupCodes;
+    await user.save();
+
+    res.json({
+      message: 'Backup codes regenerated successfully',
+      backupCodes: backupCodes
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Get remaining backup codes count
+// @route   GET /api/security/2fa/backup-codes/count
+// @access  Private
+const getBackupCodesCount = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('securitySettings.backupCodes');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const count = user.securitySettings?.backupCodes?.length || 0;
+    
+    res.json({ count });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    View backup codes with password verification
+// @route   POST /api/security/2fa/backup-codes/view
+// @access  Private
+const viewBackupCodes = async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ message: 'Please provide your password' });
+    }
+
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect password' });
+    }
+
+    if (!user.securitySettings?.twoFactorEnabled) {
+      return res.status(400).json({ message: '2FA is not enabled' });
+    }
+
+    res.json({
+      backupCodes: user.securitySettings.backupCodes || [],
+      count: user.securitySettings.backupCodes?.length || 0
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 module.exports = {
   getPrivacySettings,
@@ -434,5 +536,8 @@ module.exports = {
   verify2FA,
   disable2FA,
   deleteAccount,
-  trackLoginActivity
+  trackLoginActivity,
+  regenerateBackupCodes,
+  getBackupCodesCount,
+  viewBackupCodes
 };
