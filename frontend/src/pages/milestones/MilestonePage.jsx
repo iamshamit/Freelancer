@@ -12,7 +12,7 @@ import MilestoneForm from '../../components/milestones/MilestoneForm';
 import PaymentReleaseModal from '../../components/milestones/PaymentReleaseModal';
 import EscrowBalance from '../../components/payments/EscrowBalance';
 import Button from '../../components/common/Button';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import SkeletonLoader from '../../components/common/SkeletonLoader';
 import AuthContext from '../../context/AuthContext';
 import api from '../../services/api';
 
@@ -117,9 +117,7 @@ const MilestonePage = () => {
   if (jobLoading || milestonesLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner />
-        </div>
+        <SkeletonLoader type="milestone-page" />
       </DashboardLayout>
     );
   }

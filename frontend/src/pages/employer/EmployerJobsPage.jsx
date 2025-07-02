@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {Link} from 'react-router-dom'
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Briefcase, Plus, AlertCircle } from "lucide-react";
+import { Briefcase, Plus, AlertCircle, CheckCircle } from "lucide-react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import EmployerJobCard from "../../components/jobs/EmployerJobCard";
 import EmployerJobListItem from "../../components/jobs/EmployerJobListItem";
@@ -18,6 +18,7 @@ const EmployerJobsPage = ({ darkMode, toggleDarkMode }) => {
     return localStorage.getItem("employerJobViewPreference") || "grid";
   });
   const [filters, setFilters] = useState({});
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("employerJobViewPreference", view);
@@ -36,15 +37,35 @@ const EmployerJobsPage = ({ darkMode, toggleDarkMode }) => {
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
+
+  const handleCompletedToggle = () => {
+    setShowCompleted(!showCompleted);
+    // Clear other filters when switching to completed view
+    if (!showCompleted) {
+      setFilters({});
+    }
+  };
   
   const jobs = (jobsData || []).filter((job) => {
-  const matchesSearch =
-    !filters.search ||
-    job.title.toLowerCase().includes(filters.search.toLowerCase());
-  const matchesStatus = !filters.status || job.status === filters.status;
-  return matchesSearch && matchesStatus;
-});
+    // First filter by completed status
+    if (showCompleted) {
+      // When showing completed, only show completed jobs
+      return job.status === 'completed';
+    } else {
+      // When not showing completed, exclude completed jobs from all results
+      if (job.status === 'completed') return false;
+    }
+
+    // Then apply other filters (only when not in completed mode)
+    const matchesSearch =
+      !filters.search ||
+      job.title.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesStatus = !filters.status || job.status === filters.status;
+    return matchesSearch && matchesStatus;
+  });
+
   const hasJobs = jobs.length > 0;
+  const hasActiveFilters = Object.keys(filters).length > 0 || showCompleted;
 
   return (
     <DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
@@ -58,10 +79,13 @@ const EmployerJobsPage = ({ darkMode, toggleDarkMode }) => {
           <div className="flex flex-wrap justify-between items-start mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                My Jobs
+                My Jobs {showCompleted && "(Completed)"}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Manage your posted jobs and review applicants
+                {showCompleted 
+                  ? "View your completed job postings"
+                  : "Manage your posted jobs and review applicants"
+                }
               </p>
             </div>
             <div className="mt-4 md:mt-0">
@@ -76,7 +100,22 @@ const EmployerJobsPage = ({ darkMode, toggleDarkMode }) => {
 
           {/* Filters and View Toggle */}
           <div className="flex flex-wrap justify-between items-center mb-6">
-            <EmployerJobFilterBar onFilterChange={handleFilterChange} />
+            <div className="flex flex-wrap items-center gap-4">
+              <div className={showCompleted ? "opacity-50 pointer-events-none" : ""}>
+                <EmployerJobFilterBar 
+                  onFilterChange={handleFilterChange}
+                  disabled={showCompleted}
+                />
+              </div>
+              <Button
+                variant={showCompleted ? "primary" : "outline"}
+                onClick={handleCompletedToggle}
+                className="flex items-center"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Completed
+              </Button>
+            </div>
             <div className="mt-4 sm:mt-0">
               <ViewToggle view={view} onViewChange={setView} />
             </div>
