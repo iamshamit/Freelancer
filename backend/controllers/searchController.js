@@ -54,6 +54,7 @@ const globalSearch = async (req, res) => {
         'privacySettings.search.appearInSearch': true,
         'privacySettings.search.showInDirectory': true,
         'accountStatus.isActive': true,
+        'accountStatus.isSuspended': false,
         $or: [
           { name: searchRegex },
           { bio: searchRegex },
@@ -62,34 +63,14 @@ const globalSearch = async (req, res) => {
       };
 
       const freelancers = await User.find(freelancerFilter)
-        .select('name email profilePicture bio skills averageRating completedJobs privacySettings')
+        .select('name profilePicture bio skills averageRating completedJobs')
         .sort({ averageRating: -1, completedJobs: -1 })
         .limit(limit)
         .skip(skip);
 
-      // Filter out sensitive information based on privacy settings
-      const filteredFreelancers = freelancers.map(freelancer => {
-        const publicData = {
-          _id: freelancer._id,
-          name: freelancer.name,
-          profilePicture: freelancer.profilePicture,
-          bio: freelancer.bio,
-          skills: freelancer.skills,
-          averageRating: freelancer.averageRating,
-          completedJobs: freelancer.completedJobs
-        };
-
-        // Only include email if privacy setting allows
-        if (freelancer.privacySettings?.profile?.showEmail) {
-          publicData.email = freelancer.email;
-        }
-
-        return publicData;
-      });
-
       const freelancerCount = await User.countDocuments(freelancerFilter);
       
-      results.freelancers = filteredFreelancers;
+      results.freelancers = freelancers;
       results.totalResults += freelancerCount;
     }
 
@@ -119,10 +100,12 @@ const getSearchSuggestions = async (req, res) => {
       status: 'open'
     }).limit(5);
 
-    // Get skill suggestions
+    // Get skill suggestions from freelancers who appear in search
     const skillSuggestions = await User.distinct('skills', {
       skills: searchRegex,
-      role: 'freelancer'
+      role: 'freelancer',
+      'privacySettings.search.appearInSearch': true,
+      'accountStatus.isActive': true
     }).limit(5);
 
     // Get domain suggestions
@@ -162,14 +145,16 @@ const searchFreelancers = async (req, res) => {
       role: 'freelancer',
       'privacySettings.search.appearInSearch': true,
       'privacySettings.search.showInDirectory': true,
-      'accountStatus.isActive': true
+      'accountStatus.isActive': true,
+      'accountStatus.isSuspended': false
     };
 
     // Search filter
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { bio: { $regex: search, $options: 'i' } }
+        { bio: { $regex: search, $options: 'i' } },
+        { skills: { $regex: search, $options: 'i' } }
       ];
     }
 
@@ -194,7 +179,7 @@ const searchFreelancers = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const freelancers = await User.find(filter)
-      .select('name email profilePicture bio skills averageRating completedJobs ratings privacySettings')
+      .select('name profilePicture bio skills averageRating completedJobs ratings')
       .populate({
         path: 'ratings',
         options: { limit: 3, sort: { createdAt: -1 } },
@@ -207,31 +192,10 @@ const searchFreelancers = async (req, res) => {
       .limit(parseInt(limit))
       .skip(skip);
 
-    // Filter freelancers based on privacy settings
-    const filteredFreelancers = freelancers.map(freelancer => {
-      const publicData = {
-        _id: freelancer._id,
-        name: freelancer.name,
-        profilePicture: freelancer.profilePicture,
-        bio: freelancer.bio,
-        skills: freelancer.skills,
-        averageRating: freelancer.averageRating,
-        completedJobs: freelancer.completedJobs,
-        ratings: freelancer.ratings
-      };
-
-      // Only include email if privacy setting allows
-      if (freelancer.privacySettings?.profile?.showEmail) {
-        publicData.email = freelancer.email;
-      }
-
-      return publicData;
-    });
-
     const total = await User.countDocuments(filter);
 
     res.json({
-      freelancers: filteredFreelancers,
+      freelancers,
       page: parseInt(page),
       pages: Math.ceil(total / limit),
       total

@@ -1,10 +1,10 @@
-// src/components/payments/PaymentCard.jsx
 import { motion } from 'framer-motion';
-import { Download, ExternalLink, Calendar, DollarSign } from 'lucide-react';
+import { Download, ExternalLink, Calendar, DollarSign, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import PaymentStatusBadge from './PaymentStatusBadge';
 
-const PaymentCard = ({ payment, onDownloadReceipt, index = 0 }) => {
-  const { amount, status, date, description, transactionId, milestoneTitle } = payment;
+const PaymentCard = ({ payment, onDownloadReceipt, userRole, index = 0 }) => {
+  const { amount, status, date, description, transactionId, milestoneTitle, job } = payment;
+  const isEmployer = userRole === 'employer';
 
   return (
     <motion.div
@@ -15,17 +15,28 @@ const PaymentCard = ({ payment, onDownloadReceipt, index = 0 }) => {
     >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h4 className="font-medium text-white">{milestoneTitle}</h4>
-          <p className="text-sm text-gray-400 mt-1">{description}</p>
+          <h4 className="font-medium text-white">{job?.title}</h4>
+          <p className="text-sm text-gray-400 mt-1">
+            {isEmployer ? milestoneTitle : description}
+          </p>
         </div>
-        <PaymentStatusBadge status={status} size="small" />
+        <div className="flex items-center gap-2">
+          {isEmployer ? (
+            <ArrowUpRight className="w-4 h-4 text-red-400" />
+          ) : (
+            <ArrowDownLeft className="w-4 h-4 text-green-400" />
+          )}
+          <PaymentStatusBadge status={status} size="small" />
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
             <DollarSign className="w-4 h-4 text-gray-500" />
-            <span className="font-medium text-white">${amount}</span>
+            <span className={`font-medium ${isEmployer ? 'text-red-400' : 'text-green-400'}`}>
+              {isEmployer ? '-' : '+'}${amount}
+            </span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="w-4 h-4 text-gray-500" />
@@ -37,13 +48,13 @@ const PaymentCard = ({ payment, onDownloadReceipt, index = 0 }) => {
           <button
             onClick={() => onDownloadReceipt(payment._id)}
             className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-            title="Download Receipt"
+            title={`Download ${isEmployer ? 'Payment' : 'Earnings'} Receipt`}
           >
             <Download className="w-4 h-4 text-gray-400" />
           </button>
           <button
             className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-            title="View Transaction"
+            title="View Transaction Details"
           >
             <ExternalLink className="w-4 h-4 text-gray-400" />
           </button>

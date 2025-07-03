@@ -1,4 +1,3 @@
-// frontend/src/services/api.js
 import axios from 'axios';
 
 // Create axios instance
@@ -132,10 +131,15 @@ const api = {
   // Payment endpoints
   payment: {
     getHistory: (params) => axiosInstance.get('/payments/history', { params }).then(res => res.data),
-    getReceipt: (paymentId) => axiosInstance.get(`/payments/${paymentId}/receipt`).then(res => res.data),
+    getReceipt: (paymentId) => axiosInstance.get(`/payments/${paymentId}/receipt`, { 
+      responseType: 'blob' 
+    }).then(res => res.data),
     getEscrowBalance: (jobId) => axiosInstance.get(`/jobs/${jobId}/escrow`).then(res => res.data),
     getTransactionDetails: (transactionId) => axiosInstance.get(`/payments/transaction/${transactionId}`).then(res => res.data),
-    exportHistory: (format = 'csv') => axiosInstance.get(`/payments/export`, { params: { format },responseType: 'blob'}).then(res => res.data)
+    exportHistory: (format = 'csv', filters = {}) => axiosInstance.get('/payments/export', { 
+      params: { format, ...filters },
+      responseType: 'blob'
+    }).then(res => res.data)
   },
   
   search: {

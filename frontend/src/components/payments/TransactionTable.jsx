@@ -1,13 +1,14 @@
-// src/components/payments/TransactionTable.jsx
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronUp, ChevronDown, Download, Search } from 'lucide-react';
+import { ChevronUp, ChevronDown, Download, Search, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import PaymentStatusBadge from './PaymentStatusBadge';
 
-const TransactionTable = ({ transactions, onDownloadReceipt }) => {
+const TransactionTable = ({ transactions, onDownloadReceipt, userRole }) => {
   const [sortField, setSortField] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const isEmployer = userRole === 'employer';
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -20,7 +21,8 @@ const TransactionTable = ({ transactions, onDownloadReceipt }) => {
 
   const filteredTransactions = transactions.filter(transaction =>
     transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    transaction.transactionId.toLowerCase().includes(searchQuery.toLowerCase())
+    transaction.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    transaction.job?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const sortedTransactions = [...filteredTransactions].sort((a, b) => {
@@ -48,7 +50,7 @@ const TransactionTable = ({ transactions, onDownloadReceipt }) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search transactions..."
+            placeholder={`Search ${isEmployer ? 'expenses' : 'earnings'}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -72,7 +74,7 @@ const TransactionTable = ({ transactions, onDownloadReceipt }) => {
               </th>
               <th className="px-6 py-3 text-left">
                 <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-                  Description
+                  {isEmployer ? 'Payment To' : 'Payment From'}
                 </div>
               </th>
               <th 
@@ -87,6 +89,11 @@ const TransactionTable = ({ transactions, onDownloadReceipt }) => {
               <th className="px-6 py-3 text-left">
                 <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
                   Status
+                </div>
+              </th>
+              <th className="px-6 py-3 text-left">
+                <div className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  Type
                 </div>
               </th>
               <th className="px-6 py-3 text-left">
@@ -110,21 +117,36 @@ const TransactionTable = ({ transactions, onDownloadReceipt }) => {
                 </td>
                 <td className="px-6 py-4">
                   <div>
-                    <p className="text-sm text-white">{transaction.description}</p>
-                    <p className="text-xs text-gray-500 mt-1">ID: {transaction.transactionId}</p>
+                    <p className="text-sm text-white font-medium">{transaction.job?.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {isEmployer ? transaction.milestoneTitle : transaction.description}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">ID: {transaction.transactionId}</p>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="text-sm font-medium text-white">${transaction.amount}</span>
+                  <div className="flex items-center gap-2">
+                    {isEmployer ? (
+                      <ArrowUpRight className="w-4 h-4 text-red-400" />
+                    ) : (
+                      <ArrowDownLeft className="w-4 h-4 text-green-400" />
+                    )}
+                    <span className={`text-sm font-medium ${isEmployer ? 'text-red-400' : 'text-green-400'}`}>
+                      {isEmployer ? '-' : '+'}${transaction.amount}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <PaymentStatusBadge status={transaction.status} size="small" />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-sm text-gray-300 capitalize">{transaction.type}</span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   <button
                     onClick={() => onDownloadReceipt(transaction._id)}
                     className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                    title="Download Receipt"
+                    title={`Download ${isEmployer ? 'Payment' : 'Earnings'} Receipt`}
                   >
                     <Download className="w-4 h-4 text-gray-400" />
                   </button>

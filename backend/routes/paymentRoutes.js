@@ -4,9 +4,9 @@ const router = express.Router();
 const {
   getPaymentHistory,
   getPaymentReceipt,
-  exportPaymentHistory
+  exportPaymentHistory,
+  getEscrowBalance
 } = require('../controllers/paymentController');
-const { getEscrowBalance } = require('../controllers/paymentController');
 const { protect } = require('../middleware/auth');
 
 router.get('/history', protect, getPaymentHistory);
