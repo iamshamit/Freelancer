@@ -19,6 +19,8 @@ import {
   RefreshCw,
   Calendar,
   Eye,
+  Zap,
+  MessageSquare 
 } from "lucide-react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import SkeletonLoader from "../../components/common/SkeletonLoader";
