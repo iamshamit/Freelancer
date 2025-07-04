@@ -1,10 +1,10 @@
 // src/components/milestones/PaymentReleaseModal.jsx
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, DollarSign, CheckCircle, AlertCircle } from 'lucide-react';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, IndianRupee, CheckCircle, AlertCircle } from "lucide-react";
 
 const PaymentReleaseModal = ({ milestone, onConfirm, onClose, isLoading }) => {
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleConfirm = async () => {
@@ -89,13 +89,13 @@ const PaymentReleaseModal = ({ milestone, onConfirm, onClose, isLoading }) => {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 {milestone.description}
               </p>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   Amount to Release
                 </span>
                 <span className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-                  ${milestone.amount}
+                  ₹{milestone.amount}
                 </span>
               </div>
             </div>
@@ -108,7 +108,8 @@ const PaymentReleaseModal = ({ milestone, onConfirm, onClose, isLoading }) => {
                   Important
                 </p>
                 <p className="text-xs text-orange-700 dark:text-orange-300">
-                  Once approved, the payment will be immediately released to the freelancer. This action cannot be undone.
+                  Once approved, the payment will be immediately released to the
+                  freelancer. This action cannot be undone.
                 </p>
               </div>
             </div>
@@ -149,7 +150,7 @@ const PaymentReleaseModal = ({ milestone, onConfirm, onClose, isLoading }) => {
                   </>
                 ) : (
                   <>
-                    <DollarSign className="w-4 h-4" />
+                    <IndianRupee className="w-4 h-4" />
                     <span>Approve & Release</span>
                   </>
                 )}

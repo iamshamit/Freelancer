@@ -14,7 +14,7 @@ import {
   AlertTriangle,
   Shield,
   ShieldOff,
-  DollarSign,
+  IndianRupee,
   Star,
   Clock,
   Activity,
@@ -353,8 +353,8 @@ const UserDetailPage = ({ darkMode, toggleDarkMode }) => {
             {
               title:
                 user.role === "freelancer" ? "Total Earnings" : "Total Spent",
-              value: `$${((user.role === "freelancer" ? statistics?.totalEarnings : statistics?.totalSpent) || 0).toLocaleString()}`,
-              icon: DollarSign,
+              value: `₹${((user.role === "freelancer" ? statistics?.totalEarnings : statistics?.totalSpent) || 0).toLocaleString()}`,
+              icon: IndianRupee,
               color: "orange",
               subtitle:
                 user.role === "freelancer"

@@ -12,7 +12,7 @@ import {
   Users,
   Briefcase,
   MessageSquare,
-  DollarSign,
+  IndianRupee,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -70,7 +70,7 @@ const AdminActivity = ({ darkMode, toggleDarkMode }) => {
       case "message_sent":
         return MessageSquare;
       case "payment_processed":
-        return DollarSign;
+        return IndianRupee;
       default:
         return Activity;
     }
@@ -426,18 +426,19 @@ const AdminActivity = ({ darkMode, toggleDarkMode }) => {
                       const limit = 20;
                       const currentPage = data.pagination.currentPage || 1;
                       const currentPageItems = data.activities?.length || 0;
-                      
+
                       if (currentPageItems > 0) {
                         const startItem = (currentPage - 1) * limit + 1;
-                        const endItem = (currentPage - 1) * limit + currentPageItems;
+                        const endItem =
+                          (currentPage - 1) * limit + currentPageItems;
                         return `Showing ${startItem} to ${endItem}`;
                       }
-                      
+
                       return `No activities found`;
                     })()}
                   </span>
                 </div>
-          
+
                 <div className="flex items-center gap-2">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -451,14 +452,14 @@ const AdminActivity = ({ darkMode, toggleDarkMode }) => {
                     <ChevronLeft className="w-4 h-4" />
                     <span>Previous</span>
                   </motion.button>
-          
+
                   <div className="flex items-center gap-1">
                     {[...Array(Math.min(5, data.pagination.totalPages))].map(
                       (_, i) => {
                         const page =
                           Math.max(1, data.pagination.currentPage - 2) + i;
                         if (page > data.pagination.totalPages) return null;
-          
+
                         return (
                           <motion.button
                             key={page}
@@ -477,7 +478,7 @@ const AdminActivity = ({ darkMode, toggleDarkMode }) => {
                       },
                     )}
                   </div>
-          
+
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

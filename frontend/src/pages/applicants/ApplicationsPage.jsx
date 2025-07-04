@@ -10,7 +10,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Search,
   ChevronRight,
@@ -58,11 +58,11 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
   // Filter applications based on status and search query
   const getFilteredApplications = () => {
     if (!applications || !Array.isArray(applications)) return [];
-  
+
     return applications.filter((app) => {
       // Skip invalid applications
       if (!app) return false;
-  
+
       // Filter by status
       if (activeFilter === "completed") {
         // Show only completed jobs
@@ -70,26 +70,26 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
       } else {
         // For all other filters (including "all") - exclude completed jobs
         if (app.status === "completed") return false;
-        
+
         // Then filter by application status for specific filters
         if (activeFilter !== "all" && app.applicationStatus !== activeFilter) {
           return false;
         }
       }
-  
+
       // Filter by search query
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const title = app.title?.toLowerCase() || "";
         const employerName = app.employer?.name?.toLowerCase() || "";
-  
+
         return title.includes(query) || employerName.includes(query);
       }
-  
+
       return true;
     });
   };
-  
+
   const filteredApplications = getFilteredApplications();
 
   // Get status badge variant and icon
@@ -368,9 +368,9 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                         <div className="flex flex-wrap gap-4 mb-4">
                           {application.budget !== undefined && (
                             <div className="flex items-center text-green-600 dark:text-green-400 font-medium">
-                              <DollarSign className="h-4 w-4 mr-1" />
+                              <IndianRupee className="h-4 w-4 mr-1" />
                               <span>
-                                $
+                                ₹
                                 {typeof application.budget === "number"
                                   ? application.budget.toFixed(2)
                                   : application.budget}
@@ -417,7 +417,7 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                                   View Milestones
                                 </Button>
                               </Link>
-                              
+
                               {!application.isRatedByEmployer && (
                                 <Link to={`/rate-employer/${application._id}`}>
                                   <Button
@@ -447,7 +447,7 @@ const ApplicationsPage = ({ darkMode, toggleDarkMode }) => {
                                 <MessageSquare className="h-4 w-4 mr-2" />
                                 Message Employer
                               </Button>
-                              
+
                               <Link to={`/job/${application._id}/milestones`}>
                                 <Button
                                   variant="outline"

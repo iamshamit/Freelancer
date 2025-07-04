@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Briefcase, AlertCircle, ArrowUpDown, DollarSign } from "lucide-react";
+import { Briefcase, AlertCircle, ArrowUpDown, IndianRupee } from "lucide-react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import JobCard from "../../components/jobs/JobCard";
 import JobListItem from "../../components/jobs/JobListItem";
@@ -16,14 +16,14 @@ const JobListingPage = ({ darkMode, toggleDarkMode }) => {
   const [filters, setFilters] = useState({});
   const [view, setView] = useState(() => {
     // Get saved view preference from localStorage or default to 'grid'
-    return localStorage.getItem('jobViewPreference') || 'grid';
+    return localStorage.getItem("jobViewPreference") || "grid";
   });
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState("newest");
   const observer = useRef();
 
   // Save view preference to localStorage
   useEffect(() => {
-    localStorage.setItem('jobViewPreference', view);
+    localStorage.setItem("jobViewPreference", view);
   }, [view]);
 
   // Fetch jobs with infinite query
@@ -61,7 +61,7 @@ const JobListingPage = ({ darkMode, toggleDarkMode }) => {
 
       if (node) observer.current.observe(node);
     },
-    [isLoading, isFetchingNextPage, hasNextPage, fetchNextPage]
+    [isLoading, isFetchingNextPage, hasNextPage, fetchNextPage],
   );
 
   // Handle filter changes
@@ -88,9 +88,7 @@ const JobListingPage = ({ darkMode, toggleDarkMode }) => {
   const hasJobs = jobs.length > 0;
 
   // View toggle component
-  const viewToggleComponent = (
-    <ViewToggle view={view} onViewChange={setView} />
-  );
+  const viewToggleComponent = <ViewToggle view={view} onViewChange={setView} />;
 
   return (
     <DashboardLayout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
@@ -109,7 +107,7 @@ const JobListingPage = ({ darkMode, toggleDarkMode }) => {
                 Browse and find the perfect job for your skills
               </p>
             </div>
-            
+
             <div className="mt-4 md:mt-0 flex items-center gap-3">
               <div className="relative">
                 <select
@@ -130,11 +128,14 @@ const JobListingPage = ({ darkMode, toggleDarkMode }) => {
           </div>
 
           {/* Filters */}
-          <JobFilterBar onFilterChange={handleFilterChange} viewToggle={viewToggleComponent} />
+          <JobFilterBar
+            onFilterChange={handleFilterChange}
+            viewToggle={viewToggleComponent}
+          />
 
           {/* Job listings */}
           {isLoading ? (
-            view === 'grid' ? (
+            view === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
                   <SkeletonLoader key={i} type="card" />
@@ -157,7 +158,7 @@ const JobListingPage = ({ darkMode, toggleDarkMode }) => {
             />
           ) : hasJobs ? (
             <AnimatePresence mode="wait">
-              {view === 'grid' ? (
+              {view === "grid" ? (
                 <motion.div
                   key="grid-view"
                   initial={{ opacity: 0 }}

@@ -7,24 +7,24 @@ import {
   X,
   Home,
   Briefcase,
+  Users,
   MessageSquare,
-  Bell,
-  User,
   Settings,
   LogOut,
+  Bell,
+  Search,
+  User,
   Moon,
   Sun,
   ChevronDown,
-  Search,
-  ChevronLeft,
   ChevronRight,
+  ChevronLeft,
   Plus,
   FileText,
-  DollarSign,
   Shield,
   BarChart3,
-  Users,
   Activity,
+  IndianRupee
 } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
 import AuthContext from "../../context/AuthContext";
@@ -119,7 +119,7 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
       },
       {
         name: "Payment History",
-        icon: <DollarSign className="w-5 h-5" />,
+        icon: <IndianRupee className="w-5 h-5" />,
         path: "/payments/history",
         paths: ["/payments"],
       },
@@ -191,10 +191,9 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
     const settingsItem = {
       name: "Settings",
       icon: <Settings className="w-5 h-5" />,
-      path: user.role === 'admin' ? "/settings/security" : "/settings/payment",
+      path: user.role === "admin" ? "/settings/security" : "/settings/payment",
       paths: ["/settings"],
     };
-
 
     let baseItems;
 
@@ -392,7 +391,7 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
                           </span>
                         </div>
                       </div>
-                  
+
                       <div className="py-1">
                         <Link
                           to="/profile"
@@ -402,7 +401,7 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
                           <User className="h-4 w-4 mr-3 flex-shrink-0" />
                           <span>Your Profile</span>
                         </Link>
-                  
+
                         <Link
                           to="/settings/payment"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -411,7 +410,7 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
                           <Settings className="h-4 w-4 mr-3 flex-shrink-0" />
                           <span>Settings</span>
                         </Link>
-                  
+
                         <Link
                           to="/settings/security"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -421,7 +420,7 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
                           <span>Security</span>
                         </Link>
                       </div>
-                  
+
                       <div className="border-t border-gray-200 dark:border-gray-700">
                         <button
                           onClick={() => {
@@ -693,7 +692,11 @@ const DashboardLayout = ({ children, darkMode, toggleDarkMode }) => {
           resetKeys={[location.pathname]}
         >
           <motion.div
-            key={location.pathname.startsWith('/chat') ? '/chat' : location.pathname}
+            key={
+              location.pathname.startsWith("/chat")
+                ? "/chat"
+                : location.pathname
+            }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

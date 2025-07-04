@@ -417,7 +417,6 @@ io.on('connection', async (socket) => {
       }
     } catch (error) {
       console.error('❌ Error marking messages as read:', error);
-      socket.emit('error', { message: 'Failed to mark messages as read' });
     }
   });
   

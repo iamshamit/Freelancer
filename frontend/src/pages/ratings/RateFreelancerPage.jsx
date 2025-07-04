@@ -186,7 +186,7 @@ const RateFreelancerPage = ({ darkMode, toggleDarkMode }) => {
                 <p className="text-gray-600 dark:text-gray-400">
                   Budget:{" "}
                   <span className="font-medium text-green-600 dark:text-green-400">
-                    ${job.budget?.toFixed(2)}
+                    ₹{job.budget?.toFixed(2)}
                   </span>
                 </p>
               </div>

@@ -1,28 +1,38 @@
-import { useState, useContext } from 'react';
-import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import { Download, Filter, Calendar, TrendingUp, DollarSign, CreditCard, Wallet, Table, Grid3X3 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import TransactionTable from '../../components/payments/TransactionTable';
-import PaymentCard from '../../components/payments/PaymentCard';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import AuthContext from '../../context/AuthContext';
-import api from '../../services/api';
-import { downloadBlob, formatDateForFilename } from '../../utils/fileDownload';
+import { useState, useContext } from "react";
+import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Download,
+  Filter,
+  Calendar,
+  TrendingUp,
+  IndianRupee,
+  CreditCard,
+  Wallet,
+  Table,
+  Grid3X3,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import TransactionTable from "../../components/payments/TransactionTable";
+import PaymentCard from "../../components/payments/PaymentCard";
+import SkeletonLoader from "../../components/common/SkeletonLoader";
+import AuthContext from "../../context/AuthContext";
+import api from "../../services/api";
+import { downloadBlob, formatDateForFilename } from "../../utils/fileDownload";
 
 const PaymentHistoryPage = () => {
   const { user } = useContext(AuthContext);
-  const [view, setView] = useState('table');
-  const [dateRange, setDateRange] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [view, setView] = useState("table");
+  const [dateRange, setDateRange] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const isEmployer = user?.role === 'employer';
-  const isFreelancer = user?.role === 'freelancer';
+  const isEmployer = user?.role === "employer";
+  const isFreelancer = user?.role === "freelancer";
 
   // Fetch payment history
   const { data: payments = [], isLoading } = useQuery({
-    queryKey: ['payments', dateRange, statusFilter, user?.role],
+    queryKey: ["payments", dateRange, statusFilter, user?.role],
     queryFn: () => api.payment.getHistory({ dateRange, status: statusFilter }),
   });
 
@@ -31,28 +41,32 @@ const PaymentHistoryPage = () => {
     if (isEmployer) {
       return {
         totalSpent: payments.reduce((sum, p) => sum + p.amount, 0),
-        completed: payments.filter(p => p.status === 'completed').length,
-        pending: payments.filter(p => p.status === 'pending').length,
+        completed: payments.filter((p) => p.status === "completed").length,
+        pending: payments.filter((p) => p.status === "pending").length,
         thisMonth: payments
-          .filter(p => {
+          .filter((p) => {
             const paymentDate = new Date(p.date);
             const now = new Date();
-            return paymentDate.getMonth() === now.getMonth() && 
-                  paymentDate.getFullYear() === now.getFullYear();
+            return (
+              paymentDate.getMonth() === now.getMonth() &&
+              paymentDate.getFullYear() === now.getFullYear()
+            );
           })
           .reduce((sum, p) => sum + p.amount, 0),
       };
     } else {
       return {
         totalEarned: payments.reduce((sum, p) => sum + p.amount, 0),
-        completed: payments.filter(p => p.status === 'completed').length,
-        pending: payments.filter(p => p.status === 'pending').length,
+        completed: payments.filter((p) => p.status === "completed").length,
+        pending: payments.filter((p) => p.status === "pending").length,
         thisMonth: payments
-          .filter(p => {
+          .filter((p) => {
             const paymentDate = new Date(p.date);
             const now = new Date();
-            return paymentDate.getMonth() === now.getMonth() && 
-                  paymentDate.getFullYear() === now.getFullYear();
+            return (
+              paymentDate.getMonth() === now.getMonth() &&
+              paymentDate.getFullYear() === now.getFullYear()
+            );
           })
           .reduce((sum, p) => sum + p.amount, 0),
       };
@@ -63,49 +77,49 @@ const PaymentHistoryPage = () => {
 
   const handleDownloadReceipt = async (paymentId) => {
     try {
-      const loadingToast = toast.loading('Generating receipt...');
-      
+      const loadingToast = toast.loading("Generating receipt...");
+
       const blob = await api.payment.getReceipt(paymentId);
       const filename = `receipt-${paymentId.slice(-8)}.pdf`;
       downloadBlob(blob, filename);
-      
+
       toast.dismiss(loadingToast);
-      toast.success('Receipt downloaded successfully!');
+      toast.success("Receipt downloaded successfully!");
     } catch (error) {
       toast.dismiss(loadingToast);
-      toast.error('Failed to download receipt');
-      console.error('Receipt download error:', error);
+      toast.error("Failed to download receipt");
+      console.error("Receipt download error:", error);
     }
   };
 
   const handleExportCSV = async () => {
     try {
-      const loadingToast = toast.loading('Generating CSV export...');
-      
-      const blob = await api.payment.exportHistory('csv', {
+      const loadingToast = toast.loading("Generating CSV export...");
+
+      const blob = await api.payment.exportHistory("csv", {
         dateRange,
         status: statusFilter,
-        userRole: user?.role
+        userRole: user?.role,
       });
-      
-      const rolePrefix = isEmployer ? 'expenses' : 'earnings';
+
+      const rolePrefix = isEmployer ? "expenses" : "earnings";
       const filename = `${rolePrefix}-history-${formatDateForFilename()}.csv`;
       downloadBlob(blob, filename);
-      
+
       toast.dismiss(loadingToast);
-      toast.success(`${isEmployer ? 'Expense' : 'Earnings'} history exported successfully!`);
+      toast.success(
+        `${isEmployer ? "Expense" : "Earnings"} history exported successfully!`,
+      );
     } catch (error) {
-      toast.error('Failed to export payment history');
-      console.error('Export error:', error);
+      toast.error("Failed to export payment history");
+      console.error("Export error:", error);
     }
   };
 
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner />
-        </div>
+        <SkeletonLoader type="payment-history" />
       </DashboardLayout>
     );
   }
@@ -120,13 +134,12 @@ const PaymentHistoryPage = () => {
         {/* Role-specific Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">
-            {isEmployer ? 'Payment History' : 'Earnings History'}
+            {isEmployer ? "Payment History" : "Earnings History"}
           </h1>
           <p className="text-gray-400">
-            {isEmployer 
-              ? 'Track your project expenses and payments to freelancers'
-              : 'View your earnings and payment history from projects'
-            }
+            {isEmployer
+              ? "Track your project expenses and payments to freelancers"
+              : "View your earnings and payment history from projects"}
           </p>
         </div>
 
@@ -145,14 +158,14 @@ const PaymentHistoryPage = () => {
                 <Wallet className="w-8 h-8 text-green-400" />
               )}
               <span className="text-xs text-gray-500">
-                {isEmployer ? 'Total Spent' : 'Total Earned'}
+                {isEmployer ? "Total Spent" : "Total Earned"}
               </span>
             </div>
             <p className="text-2xl font-bold text-white">
-              ${isEmployer ? stats.totalSpent : stats.totalEarned}
+              ₹{isEmployer ? stats.totalSpent : stats.totalEarned}
             </p>
             <p className="text-sm text-gray-400 mt-1">
-              {isEmployer ? 'All time expenses' : 'All time earnings'}
+              {isEmployer ? "All time expenses" : "All time earnings"}
             </p>
           </motion.div>
 
@@ -166,9 +179,9 @@ const PaymentHistoryPage = () => {
               <TrendingUp className="w-8 h-8 text-blue-400" />
               <span className="text-xs text-gray-500">This Month</span>
             </div>
-            <p className="text-2xl font-bold text-white">${stats.thisMonth}</p>
+            <p className="text-2xl font-bold text-white">₹{stats.thisMonth}</p>
             <p className="text-sm text-gray-400 mt-1">
-              {isEmployer ? 'Monthly spending' : 'Monthly earnings'}
+              {isEmployer ? "Monthly spending" : "Monthly earnings"}
             </p>
           </motion.div>
 
@@ -180,13 +193,15 @@ const PaymentHistoryPage = () => {
           >
             <div className="flex items-center justify-between mb-2">
               <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                <span className="text-green-400 font-bold">{stats.completed}</span>
+                <span className="text-green-400 font-bold">
+                  {stats.completed}
+                </span>
               </div>
               <span className="text-xs text-gray-500">Completed</span>
             </div>
             <p className="text-2xl font-bold text-white">{stats.completed}</p>
             <p className="text-sm text-gray-400 mt-1">
-              {isEmployer ? 'Payments made' : 'Payments received'}
+              {isEmployer ? "Payments made" : "Payments received"}
             </p>
           </motion.div>
 
@@ -198,13 +213,15 @@ const PaymentHistoryPage = () => {
           >
             <div className="flex items-center justify-between mb-2">
               <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                <span className="text-yellow-400 font-bold">{stats.pending}</span>
+                <span className="text-yellow-400 font-bold">
+                  {stats.pending}
+                </span>
               </div>
               <span className="text-xs text-gray-500">Pending</span>
             </div>
             <p className="text-2xl font-bold text-white">{stats.pending}</p>
             <p className="text-sm text-gray-400 mt-1">
-              {isEmployer ? 'Pending releases' : 'Awaiting payment'}
+              {isEmployer ? "Pending releases" : "Awaiting payment"}
             </p>
           </motion.div>
         </div>
@@ -250,12 +267,13 @@ const PaymentHistoryPage = () => {
               {/* Inline View Toggle */}
               <div className="flex items-center bg-gray-900 border border-gray-700 rounded-lg p-1">
                 <button
-                  onClick={() => setView('table')}
+                  onClick={() => setView("table")}
                   className={`
                     flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200
-                    ${view === 'table'
-                      ? 'bg-orange-600 text-white shadow-sm' 
-                      : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
+                    ${
+                      view === "table"
+                        ? "bg-orange-600 text-white shadow-sm"
+                        : "text-gray-400 hover:text-gray-300 hover:bg-gray-800"
                     }
                   `}
                 >
@@ -263,12 +281,13 @@ const PaymentHistoryPage = () => {
                   <span className="hidden sm:inline">Table</span>
                 </button>
                 <button
-                  onClick={() => setView('cards')}
+                  onClick={() => setView("cards")}
                   className={`
                     flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200
-                    ${view === 'cards'
-                      ? 'bg-orange-600 text-white shadow-sm' 
-                      : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
+                    ${
+                      view === "cards"
+                        ? "bg-orange-600 text-white shadow-sm"
+                        : "text-gray-400 hover:text-gray-300 hover:bg-gray-800"
                     }
                   `}
                 >
@@ -282,7 +301,7 @@ const PaymentHistoryPage = () => {
                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm transition-colors flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
-                Export {isEmployer ? 'Expenses' : 'Earnings'}
+                Export {isEmployer ? "Expenses" : "Earnings"}
               </button>
             </div>
           </div>
@@ -291,18 +310,19 @@ const PaymentHistoryPage = () => {
         {/* Payment List */}
         {payments.length === 0 ? (
           <div className="bg-gray-800 rounded-lg p-12 border border-gray-700 text-center">
-            <DollarSign className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <IndianRupee className="w-16 h-16 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">
-              {isEmployer ? 'No payment history found' : 'No earnings history found'}
+              {isEmployer
+                ? "No payment history found"
+                : "No earnings history found"}
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              {isEmployer 
-                ? 'Start by posting a job and hiring freelancers'
-                : 'Complete projects to start earning'
-              }
+              {isEmployer
+                ? "Start by posting a job and hiring freelancers"
+                : "Complete projects to start earning"}
             </p>
           </div>
-        ) : view === 'table' ? (
+        ) : view === "table" ? (
           <TransactionTable
             transactions={payments}
             onDownloadReceipt={handleDownloadReceipt}

@@ -7,7 +7,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import {
   Briefcase,
-  DollarSign,
+  IndianRupee,
   FileText,
   CheckCircle,
   AlertCircle,
@@ -34,7 +34,7 @@ const validationSchema = Yup.object({
     .min(50, "Description must be at least 50 characters"),
   budget: Yup.number()
     .required("Budget is required")
-    .min(5, "Budget must be at least $5")
+    .min(5, "Budget must be at least ₹5")
     .typeError("Budget must be a number"),
 });
 
@@ -46,16 +46,16 @@ const PostJobPage = () => {
   const [formData, setFormData] = useState(null);
   const [submissionError, setSubmissionError] = useState(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  
+
   // Section refs for scrolling
   const basicDetailsRef = useRef(null);
   const descriptionRef = useRef(null);
   const budgetRef = useRef(null);
   const reviewRef = useRef(null);
-  
+
   // Query client
   const queryClient = useQueryClient();
-  
+
   // Fetch domains
   const { data: domains, isLoading: domainsLoading } = useQuery({
     queryKey: ["domains"],
@@ -74,7 +74,7 @@ const PostJobPage = () => {
     },
     onError: (error) => {
       setSubmissionError(
-        error.response?.data?.message || "Failed to create job"
+        error.response?.data?.message || "Failed to create job",
       );
       setShowPaymentModal(false);
     },
@@ -121,10 +121,7 @@ const PostJobPage = () => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 100;
 
-      if (
-        reviewRef.current &&
-        scrollPosition >= reviewRef.current.offsetTop
-      ) {
+      if (reviewRef.current && scrollPosition >= reviewRef.current.offsetTop) {
         setActiveSection("review");
       } else if (
         budgetRef.current &&
@@ -152,7 +149,7 @@ const PostJobPage = () => {
     // Add milestones=true to the form data since all payments are milestone-based
     const formDataWithMilestones = {
       ...values,
-      milestones: true
+      milestones: true,
     };
     setFormData(formDataWithMilestones);
     setShowPaymentModal(true);
@@ -284,7 +281,7 @@ const PostJobPage = () => {
                       {
                         id: "budget",
                         name: "Budget",
-                        icon: <DollarSign className="h-4 w-4" />,
+                        icon: <IndianRupee className="h-4 w-4" />,
                       },
                       {
                         id: "review",
@@ -360,15 +357,15 @@ const PostJobPage = () => {
                               errors.title || errors.domain
                                 ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                                 : values.title && values.domain
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                             }`}
                           >
                             {errors.title || errors.domain
                               ? "Incomplete"
                               : values.title && values.domain
-                              ? "Complete"
-                              : "Required"}
+                                ? "Complete"
+                                : "Required"}
                           </span>
                         </div>
                       </div>
@@ -399,7 +396,8 @@ const PostJobPage = () => {
                             className="mt-1 text-sm text-red-500"
                           />
                           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {values.title.length}/100 characters - Be specific and descriptive
+                            {values.title.length}/100 characters - Be specific
+                            and descriptive
                           </p>
                         </div>
 
@@ -464,15 +462,15 @@ const PostJobPage = () => {
                               errors.description
                                 ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                                 : values.description
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                             }`}
                           >
                             {errors.description
                               ? "Incomplete"
                               : values.description
-                              ? "Complete"
-                              : "Required"}
+                                ? "Complete"
+                                : "Required"}
                           </span>
                         </div>
                       </div>
@@ -504,7 +502,8 @@ const PostJobPage = () => {
                             className="mt-1 text-sm text-red-500"
                           />
                           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {values.description.length} characters - Minimum 50 characters
+                            {values.description.length} characters - Minimum 50
+                            characters
                           </p>
                         </div>
                       </div>
@@ -521,7 +520,7 @@ const PostJobPage = () => {
                     >
                       <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
                         <div className="flex items-center">
-                          <DollarSign className="h-5 w-5 text-orange-500 mr-2" />
+                          <IndianRupee className="h-5 w-5 text-orange-500 mr-2" />
                           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                             Budget
                           </h2>
@@ -532,15 +531,15 @@ const PostJobPage = () => {
                               errors.budget
                                 ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                                 : values.budget
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
                             }`}
                           >
                             {errors.budget
                               ? "Incomplete"
                               : values.budget
-                              ? "Complete"
-                              : "Required"}
+                                ? "Complete"
+                                : "Required"}
                           </span>
                         </div>
                       </div>
@@ -552,11 +551,11 @@ const PostJobPage = () => {
                             htmlFor="budget"
                             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                           >
-                            Budget (USD)
+                            Budget (INR)
                           </label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <DollarSign className="h-5 w-5 text-gray-400" />
+                              <IndianRupee className="h-5 w-5 text-gray-400" />
                             </div>
                             <Field
                               type="number"
@@ -578,7 +577,8 @@ const PostJobPage = () => {
                             className="mt-1 text-sm text-red-500"
                           />
                           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            This amount will be held in escrow until project completion
+                            This amount will be held in escrow until project
+                            completion
                           </p>
                         </div>
 
@@ -591,7 +591,8 @@ const PostJobPage = () => {
                                 Milestone-based Payments
                               </h4>
                               <p className="mt-1 text-sm text-blue-700 dark:text-blue-400">
-                                Funds will be released to the freelancer as they complete agreed-upon milestones
+                                Funds will be released to the freelancer as they
+                                complete agreed-upon milestones
                               </p>
                             </div>
                           </div>
@@ -653,7 +654,8 @@ const PostJobPage = () => {
                                   Domain
                                 </p>
                                 <p className="text-gray-900 dark:text-white font-medium">
-                                  {getDomainName(values.domain) || "Not specified"}
+                                  {getDomainName(values.domain) ||
+                                    "Not specified"}
                                 </p>
                               </div>
                             </div>
@@ -683,7 +685,7 @@ const PostJobPage = () => {
                           <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                             <div className="mb-3">
                               <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                                <DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
+                                <IndianRupee className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
                                 Budget
                               </h3>
                             </div>
@@ -695,7 +697,7 @@ const PostJobPage = () => {
                                   </p>
                                   <p className="text-gray-900 dark:text-white font-medium">
                                     {values.budget
-                                      ? `$${parseFloat(values.budget).toFixed(2)} USD`
+                                      ? `₹${parseFloat(values.budget).toFixed(2)} INR`
                                       : "Not specified"}
                                   </p>
                                 </div>
@@ -718,11 +720,14 @@ const PostJobPage = () => {
                                 Payment Information
                               </h4>
                               <p className="mt-1 text-sm text-blue-700 dark:text-blue-400">
-                                Upon submission, you'll be prompted to make a payment of{" "}
+                                Upon submission, you'll be prompted to make a
+                                payment of{" "}
                                 <strong>
-                                  ${parseFloat(values.budget || 0).toFixed(2)} USD
+                                  ₹{parseFloat(values.budget || 0).toFixed(2)}{" "}
+                                  INR
                                 </strong>
-                                . This amount will be held in escrow until the project is completed.
+                                . This amount will be held in escrow until the
+                                project is completed.
                               </p>
                             </div>
                           </div>
@@ -736,7 +741,9 @@ const PostJobPage = () => {
                         </div>
                         <Button
                           type="submit"
-                          disabled={!isValid || !dirty || createJobMutation.isPending}
+                          disabled={
+                            !isValid || !dirty || createJobMutation.isPending
+                          }
                           isLoading={createJobMutation.isPending}
                           className="px-5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
                         >

@@ -1,66 +1,75 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
-import api from '../../services/api';
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ChevronUp, X } from "lucide-react";
+import api from "../../services/api";
 
 const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     budget: true,
     rating: true,
-    domain: true
+    domain: true,
   });
 
   // Fetch domains
   const { data: domains } = useQuery({
-    queryKey: ['domains'],
+    queryKey: ["domains"],
     queryFn: api.domains.getAll,
   });
 
   // Popular skills (could be fetched from API)
   const popularSkills = [
-    'React', 'Node.js', 'Python', 'JavaScript', 'TypeScript',
-    'UI/UX Design', 'WordPress', 'Mobile Development', 'Data Analysis',
-    'Content Writing', 'Digital Marketing', 'Video Editing'
+    "React",
+    "Node.js",
+    "Python",
+    "JavaScript",
+    "TypeScript",
+    "UI/UX Design",
+    "WordPress",
+    "Mobile Development",
+    "Data Analysis",
+    "Content Writing",
+    "Digital Marketing",
+    "Video Editing",
   ];
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
 
   const handleSkillToggle = (skill) => {
     const currentSkills = filters.skills || [];
     const newSkills = currentSkills.includes(skill)
-      ? currentSkills.filter(s => s !== skill)
+      ? currentSkills.filter((s) => s !== skill)
       : [...currentSkills, skill];
-    
+
     onFiltersChange({
       ...filters,
-      skills: newSkills.length > 0 ? newSkills : undefined
+      skills: newSkills.length > 0 ? newSkills : undefined,
     });
   };
 
   const handleBudgetChange = (field, value) => {
     onFiltersChange({
       ...filters,
-      [field]: value ? parseFloat(value) : undefined
+      [field]: value ? parseFloat(value) : undefined,
     });
   };
 
   const handleRatingChange = (rating) => {
     onFiltersChange({
       ...filters,
-      minRating: filters.minRating === rating ? undefined : rating
+      minRating: filters.minRating === rating ? undefined : rating,
     });
   };
 
   const handleDomainChange = (domainId) => {
     onFiltersChange({
       ...filters,
-      domain: filters.domain === domainId ? undefined : domainId
+      domain: filters.domain === domainId ? undefined : domainId,
     });
   };
 
@@ -95,9 +104,9 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
             ))}
             {filters.minBudget && (
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 rounded-full text-sm">
-                Min: ${filters.minBudget}
+                Min: ₹{filters.minBudget}
                 <button
-                  onClick={() => clearFilter('minBudget')}
+                  onClick={() => clearFilter("minBudget")}
                   className="hover:text-orange-900 dark:hover:text-orange-300"
                 >
                   <X className="w-3 h-3" />
@@ -106,9 +115,9 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
             )}
             {filters.maxBudget && (
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 rounded-full text-sm">
-                Max: ${filters.maxBudget}
+                Max: ₹{filters.maxBudget}
                 <button
-                  onClick={() => clearFilter('maxBudget')}
+                  onClick={() => clearFilter("maxBudget")}
                   className="hover:text-orange-900 dark:hover:text-orange-300"
                 >
                   <X className="w-3 h-3" />
@@ -119,7 +128,7 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 rounded-full text-sm">
                 {filters.minRating}+ Stars
                 <button
-                  onClick={() => clearFilter('minRating')}
+                  onClick={() => clearFilter("minRating")}
                   className="hover:text-orange-900 dark:hover:text-orange-300"
                 >
                   <X className="w-3 h-3" />
@@ -131,10 +140,10 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
       )}
 
       {/* Skills filter */}
-      {(activeTab === 'all' || activeTab === 'freelancers') && (
+      {(activeTab === "all" || activeTab === "freelancers") && (
         <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
           <button
-            onClick={() => toggleSection('skills')}
+            onClick={() => toggleSection("skills")}
             className="flex items-center justify-between w-full text-left"
           >
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -146,7 +155,7 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
               <ChevronDown className="w-4 h-4 text-gray-400" />
             )}
           </button>
-          
+
           {expandedSections.skills && (
             <div className="mt-3 space-y-2">
               {popularSkills.map((skill) => (
@@ -171,10 +180,10 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
       )}
 
       {/* Budget filter */}
-      {(activeTab === 'all' || activeTab === 'jobs') && (
+      {(activeTab === "all" || activeTab === "jobs") && (
         <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
           <button
-            onClick={() => toggleSection('budget')}
+            onClick={() => toggleSection("budget")}
             className="flex items-center justify-between w-full text-left"
           >
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -186,7 +195,7 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
               <ChevronDown className="w-4 h-4 text-gray-400" />
             )}
           </button>
-          
+
           {expandedSections.budget && (
             <div className="mt-3 space-y-3">
               <div>
@@ -195,9 +204,11 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
                 </label>
                 <input
                   type="number"
-                  placeholder="Min $"
-                  value={filters.minBudget || ''}
-                  onChange={(e) => handleBudgetChange('minBudget', e.target.value)}
+                  placeholder="Min ₹"
+                  value={filters.minBudget || ""}
+                  onChange={(e) =>
+                    handleBudgetChange("minBudget", e.target.value)
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50"
                 />
               </div>
@@ -207,9 +218,11 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
                 </label>
                 <input
                   type="number"
-                  placeholder="Max $"
-                  value={filters.maxBudget || ''}
-                  onChange={(e) => handleBudgetChange('maxBudget', e.target.value)}
+                  placeholder="Max ₹"
+                  value={filters.maxBudget || ""}
+                  onChange={(e) =>
+                    handleBudgetChange("maxBudget", e.target.value)
+                  }
                   className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500/50"
                 />
               </div>
@@ -219,10 +232,10 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
       )}
 
       {/* Rating filter */}
-      {(activeTab === 'all' || activeTab === 'freelancers') && (
+      {(activeTab === "all" || activeTab === "freelancers") && (
         <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
           <button
-            onClick={() => toggleSection('rating')}
+            onClick={() => toggleSection("rating")}
             className="flex items-center justify-between w-full text-left"
           >
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -234,7 +247,7 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
               <ChevronDown className="w-4 h-4 text-gray-400" />
             )}
           </button>
-          
+
           {expandedSections.rating && (
             <div className="mt-3 space-y-2">
               {[4, 3, 2, 1].map((rating) => (
@@ -263,7 +276,7 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
       {domains && domains.length > 0 && (
         <div>
           <button
-            onClick={() => toggleSection('domain')}
+            onClick={() => toggleSection("domain")}
             className="flex items-center justify-between w-full text-left"
           >
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -275,7 +288,7 @@ const SearchFilters = ({ activeTab, filters, onFiltersChange }) => {
               <ChevronDown className="w-4 h-4 text-gray-400" />
             )}
           </button>
-          
+
           {expandedSections.domain && (
             <div className="mt-3 space-y-2">
               {domains.map((domain) => (

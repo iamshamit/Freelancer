@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Link as ScrollLink } from 'react-scroll';
+import { Link as ScrollLink } from "react-scroll";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "../components/layout/Navbar";
@@ -568,7 +568,7 @@ const HeroSection = ({ darkMode }) => {
                             </div>
                           </div>
                           <div className="text-orange-500 text-sm font-medium">
-                            $490
+                            ₹490
                           </div>
                         </div>
                         <div className="w-full h-2 bg-gray-600 rounded-full overflow-hidden">
@@ -1249,7 +1249,7 @@ const HowItWorksSection = ({ darkMode }) => {
             start: "top 80%",
             toggleActions: "play none none reverse",
           },
-        }
+        },
       );
     });
 
@@ -1270,7 +1270,7 @@ const HowItWorksSection = ({ darkMode }) => {
             start: "top 80%",
             toggleActions: "play none none reverse",
           },
-        }
+        },
       );
     });
 

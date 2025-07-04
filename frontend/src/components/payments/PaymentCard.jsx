@@ -1,10 +1,25 @@
-import { motion } from 'framer-motion';
-import { Download, ExternalLink, Calendar, DollarSign, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
-import PaymentStatusBadge from './PaymentStatusBadge';
+import { motion } from "framer-motion";
+import {
+  Download,
+  ExternalLink,
+  Calendar,
+  IndianRupee,
+  ArrowUpRight,
+  ArrowDownLeft,
+} from "lucide-react";
+import PaymentStatusBadge from "./PaymentStatusBadge";
 
 const PaymentCard = ({ payment, onDownloadReceipt, userRole, index = 0 }) => {
-  const { amount, status, date, description, transactionId, milestoneTitle, job } = payment;
-  const isEmployer = userRole === 'employer';
+  const {
+    amount,
+    status,
+    date,
+    description,
+    transactionId,
+    milestoneTitle,
+    job,
+  } = payment;
+  const isEmployer = userRole === "employer";
 
   return (
     <motion.div
@@ -33,14 +48,18 @@ const PaymentCard = ({ payment, onDownloadReceipt, userRole, index = 0 }) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm">
-            <DollarSign className="w-4 h-4 text-gray-500" />
-            <span className={`font-medium ${isEmployer ? 'text-red-400' : 'text-green-400'}`}>
-              {isEmployer ? '-' : '+'}${amount}
+            <IndianRupee className="w-4 h-4 text-gray-500" />
+            <span
+              className={`font-medium ${isEmployer ? "text-red-400" : "text-green-400"}`}
+            >
+              {isEmployer ? "-" : "+"}₹{amount}
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-400">{new Date(date).toLocaleDateString()}</span>
+            <span className="text-gray-400">
+              {new Date(date).toLocaleDateString()}
+            </span>
           </div>
         </div>
 
@@ -48,7 +67,7 @@ const PaymentCard = ({ payment, onDownloadReceipt, userRole, index = 0 }) => {
           <button
             onClick={() => onDownloadReceipt(payment._id)}
             className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-            title={`Download ${isEmployer ? 'Payment' : 'Earnings'} Receipt`}
+            title={`Download ${isEmployer ? "Payment" : "Earnings"} Receipt`}
           >
             <Download className="w-4 h-4 text-gray-400" />
           </button>
@@ -64,7 +83,8 @@ const PaymentCard = ({ payment, onDownloadReceipt, userRole, index = 0 }) => {
       {transactionId && (
         <div className="mt-3 pt-3 border-t border-gray-700">
           <p className="text-xs text-gray-500">
-            Transaction ID: <span className="font-mono text-gray-400">{transactionId}</span>
+            Transaction ID:{" "}
+            <span className="font-mono text-gray-400">{transactionId}</span>
           </p>
         </div>
       )}

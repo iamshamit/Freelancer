@@ -66,14 +66,11 @@ const Footer = ({ darkMode }) => {
           >
             <h3 className={`text-lg font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Contact</h3>
             <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
-              Email: support@nexara.com
-            </p>
-            <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              Phone: +1 (555) 123-4567
+              Email: shamitmishra22@gmail.com
             </p>
             <div className="mt-4 flex space-x-4">
               <a 
-                href="https://github.com/iamshamit/Freelancer" 
+                href="https://github.com/iamshamit/Freelancer"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
@@ -81,13 +78,7 @@ const Footer = ({ darkMode }) => {
                 <FaGithub className="h-5 w-5" />
               </a>
               <a 
-                href="#" 
-                className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
-              >
-                <FaTwitter className="h-5 w-5" />
-              </a>
-              <a 
-                href="#" 
+                href="https://www.linkedin.com/in/mishrashamit" 
                 className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
               >
                 <FaLinkedinIn className="h-5 w-5" />

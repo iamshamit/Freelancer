@@ -1,58 +1,70 @@
 // src/pages/admin/AdminDashboard.jsx
-import { useState, useContext } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { 
-  Users, Briefcase, DollarSign, TrendingUp, 
-  Shield, Activity, Server, Clock, ChevronRight,
-  AlertTriangle, CheckCircle, Zap, Eye, MessageSquare
-} from 'lucide-react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import SkeletonLoader from '../../components/common/SkeletonLoader';
-import AuthContext from '../../context/AuthContext';
-import api from '../../services/api';
+import { useState, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import {
+  Users,
+  Briefcase,
+  IndianRupee,
+  TrendingUp,
+  Shield,
+  Activity,
+  Server,
+  Clock,
+  ChevronRight,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Calendar,
+  Eye,
+} from "lucide-react";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import SkeletonLoader from "../../components/common/SkeletonLoader";
+import AuthContext from "../../context/AuthContext";
+import api from "../../services/api";
 
 const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
   const { user } = useContext(AuthContext);
-  
+
   // Fetch dashboard statistics
-  const { 
-    data: stats, 
-    isLoading: statsLoading, 
-    error: statsError
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    error: statsError,
   } = useQuery({
-    queryKey: ['admin-dashboard-stats'],
+    queryKey: ["admin-dashboard-stats"],
     queryFn: () => api.admin.getDashboardStats(),
-    refetchInterval: 30000
+    refetchInterval: 30000,
   });
 
   // Fetch system health
-  const { 
-    data: systemHealth, 
-    isLoading: healthLoading, 
-    error: healthError
+  const {
+    data: systemHealth,
+    isLoading: healthLoading,
+    error: healthError,
   } = useQuery({
-    queryKey: ['admin-system-health'],
+    queryKey: ["admin-system-health"],
     queryFn: api.admin.getSystemHealth,
-    refetchInterval: 60000
+    refetchInterval: 60000,
   });
 
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
+        delayChildren: 0.2,
+      },
+    },
   };
-  
+
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
+    visible: { y: 0, opacity: 1 },
   };
 
   const isLoading = statsLoading || healthLoading;
@@ -68,7 +80,8 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, <span className="text-orange-500">{user?.name || 'Admin'}</span>
+            Welcome back,{" "}
+            <span className="text-orange-500">{user?.name || "Admin"}</span>
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Monitor platform performance and manage system health.
@@ -88,7 +101,9 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Total Users
+              </h3>
               <span className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
                 <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </span>
@@ -119,7 +134,9 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Jobs</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Active Jobs
+              </h3>
               <span className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
                 <Briefcase className="h-5 w-5 text-green-600 dark:text-green-400" />
               </span>
@@ -142,9 +159,11 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Platform Revenue</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Platform Revenue
+              </h3>
               <span className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-full">
-                <DollarSign className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                <IndianRupee className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </span>
             </div>
             {statsLoading ? (
@@ -152,7 +171,10 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
             ) : (
               <>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  ${(stats?.overview?.totalTransactionAmount || 0).toLocaleString()}
+                  ₹
+                  {(
+                    stats?.overview?.totalTransactionAmount || 0
+                  ).toLocaleString()}
                 </p>
                 <div className="mt-2 flex items-center text-sm">
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -173,7 +195,9 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
             className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">System Health</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                System Health
+              </h3>
               <span className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-full">
                 <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </span>
@@ -182,7 +206,7 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
               <SkeletonLoader type="text" count={1} />
             ) : (
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {systemHealth?.overallHealth || 'Good'}
+                {systemHealth?.overallHealth || "Good"}
               </p>
             )}
             <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -198,7 +222,7 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
           animate="visible"
           className="mb-8"
         >
-          <motion.h2 
+          <motion.h2
             variants={itemVariants}
             className="text-xl font-bold text-gray-900 dark:text-white mb-6"
           >
@@ -228,13 +252,33 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
                   </span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { name: 'API Response Time', value: '127ms', status: 'good', icon: Zap },
-                  { name: 'Database Performance', value: '99.9%', status: 'good', icon: Server },
-                  { name: 'Active Users', value: systemHealth?.activeConnections || 0, status: 'good', icon: Users },
-                  { name: 'Error Rate', value: '0.01%', status: 'good', icon: AlertTriangle }
+                  {
+                    name: "API Response Time",
+                    value: "127ms",
+                    status: "good",
+                    icon: Zap,
+                  },
+                  {
+                    name: "Database Performance",
+                    value: "99.9%",
+                    status: "good",
+                    icon: Server,
+                  },
+                  {
+                    name: "Active Users",
+                    value: systemHealth?.activeConnections || 0,
+                    status: "good",
+                    icon: Users,
+                  },
+                  {
+                    name: "Error Rate",
+                    value: "0.01%",
+                    status: "good",
+                    icon: AlertTriangle,
+                  },
                 ].map((metric, index) => (
                   <motion.div
                     key={index}
@@ -244,9 +288,13 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl"
                   >
                     <div className="flex items-center space-x-3">
-                      <metric.icon className={`w-4 h-4 ${
-                        metric.status === 'good' ? 'text-green-500' : 'text-red-500'
-                      }`} />
+                      <metric.icon
+                        className={`w-4 h-4 ${
+                          metric.status === "good"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {metric.name}
                       </span>
@@ -271,7 +319,7 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
           animate="visible"
           className="mb-8"
         >
-          <motion.h2 
+          <motion.h2
             variants={itemVariants}
             className="text-xl font-bold text-gray-900 dark:text-white mb-6"
           >
@@ -299,37 +347,37 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
                   <span>Last 30 days</span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
                   {
-                    label: 'New User Registrations',
+                    label: "New User Registrations",
                     value: stats?.recentActivity?.newUsersLast30Days || 0,
                     icon: Users,
-                    color: 'blue',
-                    change: '+12.5%'
+                    color: "blue",
+                    change: "+12.5%",
                   },
                   {
-                    label: 'Job Postings',
+                    label: "Job Postings",
                     value: stats?.recentActivity?.newJobsLast30Days || 0,
                     icon: Briefcase,
-                    color: 'green',
-                    change: '+8.2%'
+                    color: "green",
+                    change: "+8.2%",
                   },
                   {
-                    label: 'Transactions Processed',
+                    label: "Transactions Processed",
                     value: stats?.recentActivity?.transactionsLast30Days || 0,
-                    icon: DollarSign,
-                    color: 'orange',
-                    change: '+18.9%'
+                    icon: IndianRupee,
+                    color: "orange",
+                    change: "+18.9%",
                   },
                   {
-                    label: 'Active Conversations',
+                    label: "Active Conversations",
                     value: stats?.overview?.activeChats || 0,
                     icon: MessageSquare,
-                    color: 'purple',
-                    change: '+5.3%'
-                  }
+                    color: "purple",
+                    change: "+5.3%",
+                  },
                 ].map((activity, index) => (
                   <motion.div
                     key={index}
@@ -339,12 +387,17 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
                     className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className={`p-2 rounded-lg ${
-                        activity.color === 'blue' ? 'bg-blue-500' :
-                        activity.color === 'green' ? 'bg-green-500' :
-                        activity.color === 'orange' ? 'bg-orange-500' :
-                        'bg-purple-500'
-                      }`}>
+                      <div
+                        className={`p-2 rounded-lg ${
+                          activity.color === "blue"
+                            ? "bg-blue-500"
+                            : activity.color === "green"
+                              ? "bg-green-500"
+                              : activity.color === "orange"
+                                ? "bg-orange-500"
+                                : "bg-purple-500"
+                        }`}
+                      >
                         <activity.icon className="w-4 h-4 text-white" />
                       </div>
                       <div>
@@ -359,12 +412,17 @@ const AdminDashboard = ({ darkMode, toggleDarkMode }) => {
                         </div>
                       </div>
                     </div>
-                    <div className={`text-2xl font-bold ${
-                      activity.color === 'blue' ? 'text-blue-600 dark:text-blue-400' :
-                      activity.color === 'green' ? 'text-green-600 dark:text-green-400' :
-                      activity.color === 'orange' ? 'text-orange-600 dark:text-orange-400' :
-                      'text-purple-600 dark:text-purple-400'
-                    }`}>
+                    <div
+                      className={`text-2xl font-bold ${
+                        activity.color === "blue"
+                          ? "text-blue-600 dark:text-blue-400"
+                          : activity.color === "green"
+                            ? "text-green-600 dark:text-green-400"
+                            : activity.color === "orange"
+                              ? "text-orange-600 dark:text-orange-400"
+                              : "text-purple-600 dark:text-purple-400"
+                      }`}
+                    >
                       {activity.value.toLocaleString()}
                     </div>
                   </motion.div>

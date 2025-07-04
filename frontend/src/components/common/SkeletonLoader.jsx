@@ -313,6 +313,96 @@ const SkeletonLoader = ({ type = 'card', count = 1 }) => {
               </div>
             </div>
           );
+          
+          case 'payment-history':
+            return (
+              <div className="max-w-7xl mx-auto p-6 animate-pulse">
+                {/* Header Skeleton */}
+                <div className="mb-8">
+                  <div className="h-8 bg-gray-600 rounded w-64 mb-2"></div>
+                  <div className="h-4 bg-gray-700 rounded w-96"></div>
+                </div>
+          
+                {/* Statistics Cards Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                  {[...Array(4)].map((_, index) => (
+                    <div key={index} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-8 h-8 bg-gray-600 rounded"></div>
+                        <div className="h-3 bg-gray-600 rounded w-16"></div>
+                      </div>
+                      <div className="h-8 bg-gray-500 rounded w-20 mb-1"></div>
+                      <div className="h-3 bg-gray-600 rounded w-24"></div>
+                    </div>
+                  ))}
+                </div>
+          
+                {/* Filters and Controls Skeleton */}
+                <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                      {/* Date Range Filter */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-gray-600 rounded"></div>
+                        <div className="h-9 bg-gray-700 rounded w-32"></div>
+                      </div>
+                      {/* Status Filter */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-gray-600 rounded"></div>
+                        <div className="h-9 bg-gray-700 rounded w-32"></div>
+                      </div>
+                    </div>
+          
+                    <div className="flex items-center gap-3">
+                      {/* View Toggle */}
+                      <div className="bg-gray-900 border border-gray-700 rounded-lg p-1 flex">
+                        <div className="h-9 w-20 bg-orange-600 rounded"></div>
+                        <div className="h-9 w-20 bg-gray-800 rounded"></div>
+                      </div>
+                      {/* Export Button */}
+                      <div className="h-9 w-32 bg-gray-700 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+          
+                {/* Payment List Skeleton - Table View */}
+                <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                  {/* Table Header */}
+                  <div className="bg-gray-700 px-6 py-4 border-b border-gray-600">
+                    <div className="grid grid-cols-6 gap-4">
+                      <div className="h-4 bg-gray-600 rounded w-16"></div>
+                      <div className="h-4 bg-gray-600 rounded w-20"></div>
+                      <div className="h-4 bg-gray-600 rounded w-24"></div>
+                      <div className="h-4 bg-gray-600 rounded w-16"></div>
+                      <div className="h-4 bg-gray-600 rounded w-20"></div>
+                      <div className="h-4 bg-gray-600 rounded w-16"></div>
+                    </div>
+                  </div>
+          
+                  {/* Table Rows */}
+                  <div className="divide-y divide-gray-700">
+                    {[...Array(6)].map((_, index) => (
+                      <div key={index} className="px-6 py-4">
+                        <div className="grid grid-cols-6 gap-4 items-center">
+                          <div className="h-4 bg-gray-600 rounded w-20"></div>
+                          <div>
+                            <div className="h-4 bg-gray-600 rounded w-32 mb-1"></div>
+                            <div className="h-3 bg-gray-700 rounded w-24"></div>
+                          </div>
+                          <div className="h-6 bg-green-500 rounded-full w-16"></div>
+                          <div className="h-4 bg-gray-600 rounded w-16"></div>
+                          <div className="h-3 bg-gray-700 rounded w-20"></div>
+                          <div className="flex gap-2">
+                            <div className="h-8 w-8 bg-gray-600 rounded"></div>
+                            <div className="h-8 w-8 bg-gray-600 rounded"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
       default:
         return <div className="h-4 bg-[#2B3543] rounded w-full animate-pulse"></div>;
     }

@@ -1,29 +1,40 @@
 // src/components/notifications/NotificationPreferences.jsx
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Bell, Mail, Smartphone, Monitor, Volume2, VolumeX,
-  Briefcase, MessageSquare, DollarSign, Star, CheckCircle,
-  Save, RotateCcw, TestTube
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import api from '../../services/api';
-import SkeletonLoader from '../common/SkeletonLoader';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Bell,
+  Mail,
+  Smartphone,
+  Monitor,
+  Volume2,
+  VolumeX,
+  Briefcase,
+  MessageSquare,
+  IndianRupee,
+  Star,
+  CheckCircle,
+  Save,
+  RotateCcw,
+  TestTube,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import api from "../../services/api";
+import SkeletonLoader from "../common/SkeletonLoader";
 
 const NotificationPreferences = () => {
   const [preferences, setPreferences] = useState({
     email: {
       enabled: true,
-      frequency: 'immediate', // immediate, daily, weekly
+      frequency: "immediate", // immediate, daily, weekly
       types: {
         new_application: true,
         job_assigned: true,
         milestone_completed: true,
         payment_released: true,
         new_message: true,
-        new_rating: true
-      }
+        new_rating: true,
+      },
     },
     push: {
       enabled: true,
@@ -33,8 +44,8 @@ const NotificationPreferences = () => {
         milestone_completed: true,
         payment_released: true,
         new_message: true,
-        new_rating: false
-      }
+        new_rating: false,
+      },
     },
     inApp: {
       enabled: true,
@@ -45,14 +56,14 @@ const NotificationPreferences = () => {
         milestone_completed: true,
         payment_released: true,
         new_message: true,
-        new_rating: true
-      }
+        new_rating: true,
+      },
     },
     quietHours: {
       enabled: false,
-      start: '22:00',
-      end: '08:00'
-    }
+      start: "22:00",
+      end: "08:00",
+    },
   });
 
   const [hasChanges, setHasChanges] = useState(false);
@@ -61,106 +72,111 @@ const NotificationPreferences = () => {
   // Notification types configuration
   const notificationTypes = [
     {
-      id: 'new_application',
-      label: 'New Job Applications',
-      description: 'When someone applies to your job posting',
+      id: "new_application",
+      label: "New Job Applications",
+      description: "When someone applies to your job posting",
       icon: Briefcase,
-      color: 'orange'
+      color: "orange",
     },
     {
-      id: 'job_assigned',
-      label: 'Job Assignments',
-      description: 'When you are selected for a job',
+      id: "job_assigned",
+      label: "Job Assignments",
+      description: "When you are selected for a job",
       icon: CheckCircle,
-      color: 'orange'
+      color: "orange",
     },
     {
-      id: 'milestone_completed',
-      label: 'Milestone Updates',
-      description: 'When milestones are completed or need approval',
+      id: "milestone_completed",
+      label: "Milestone Updates",
+      description: "When milestones are completed or need approval",
       icon: CheckCircle,
-      color: 'orange'
+      color: "orange",
     },
     {
-      id: 'payment_released',
-      label: 'Payment Notifications',
-      description: 'When payments are released or received',
-      icon: DollarSign,
-      color: 'orange'
+      id: "payment_released",
+      label: "Payment Notifications",
+      description: "When payments are released or received",
+      icon: IndianRupee,
+      color: "orange",
     },
     {
-      id: 'new_message',
-      label: 'New Messages',
-      description: 'When you receive new chat messages',
+      id: "new_message",
+      label: "New Messages",
+      description: "When you receive new chat messages",
       icon: MessageSquare,
-      color: 'orange'
+      color: "orange",
     },
     {
-      id: 'new_rating',
-      label: 'Reviews & Ratings',
-      description: 'When you receive new reviews or ratings',
+      id: "new_rating",
+      label: "Reviews & Ratings",
+      description: "When you receive new reviews or ratings",
       icon: Star,
-      color: 'orange'
-    }
+      color: "orange",
+    },
   ];
 
   // Fetch current preferences
   const { data: currentPreferences, isLoading } = useQuery({
-    queryKey: ['notification-preferences'],
+    queryKey: ["notification-preferences"],
     queryFn: () => api.notification.getPreferences(),
     onSuccess: (data) => {
       if (data) {
         setPreferences(data);
       }
-    }
+    },
   });
 
   // Update preferences mutation
   const updatePreferencesMutation = useMutation({
-    mutationFn: (newPreferences) => api.notification.updatePreferences(newPreferences),
+    mutationFn: (newPreferences) =>
+      api.notification.updatePreferences(newPreferences),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
+      queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       setHasChanges(false);
-      toast.success('Notification preferences updated successfully');
+      toast.success("Notification preferences updated successfully");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to update preferences');
-    }
+      toast.error(
+        error.response?.data?.message || "Failed to update preferences",
+      );
+    },
   });
 
   // Send test notification mutation
   const sendTestMutation = useMutation({
     mutationFn: (type) => api.notification.sendTest(type),
     onSuccess: () => {
-      toast.success('Test notification sent!');
+      toast.success("Test notification sent!");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to send test notification');
-    }
+      toast.error(
+        error.response?.data?.message || "Failed to send test notification",
+      );
+    },
   });
 
   // Handle preference changes
   const updatePreference = (section, key, value) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
-        [key]: value
-      }
+        [key]: value,
+      },
     }));
     setHasChanges(true);
   };
 
   const updateTypePreference = (section, type, value) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
         types: {
           ...prev[section].types,
-          [type]: value
-        }
-      }
+          [type]: value,
+        },
+      },
     }));
     setHasChanges(true);
   };
@@ -180,14 +196,14 @@ const NotificationPreferences = () => {
 
   // Request notification permission
   const requestNotificationPermission = async () => {
-    if ('Notification' in window) {
+    if ("Notification" in window) {
       const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        toast.success('Browser notifications enabled!');
-        updatePreference('push', 'enabled', true);
+      if (permission === "granted") {
+        toast.success("Browser notifications enabled!");
+        updatePreference("push", "enabled", true);
       } else {
-        toast.error('Browser notifications denied');
-        updatePreference('push', 'enabled', false);
+        toast.error("Browser notifications denied");
+        updatePreference("push", "enabled", false);
       }
     }
   };
@@ -229,7 +245,9 @@ const NotificationPreferences = () => {
               className="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-4 w-4 mr-2" />
-              {updatePreferencesMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {updatePreferencesMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </button>
           </div>
         )}
@@ -251,12 +269,14 @@ const NotificationPreferences = () => {
               </p>
             </div>
           </div>
-          
+
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               checked={preferences.email.enabled}
-              onChange={(e) => updatePreference('email', 'enabled', e.target.checked)}
+              onChange={(e) =>
+                updatePreference("email", "enabled", e.target.checked)
+              }
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
@@ -266,7 +286,7 @@ const NotificationPreferences = () => {
         {preferences.email.enabled && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4"
           >
@@ -277,7 +297,9 @@ const NotificationPreferences = () => {
               </label>
               <select
                 value={preferences.email.frequency}
-                onChange={(e) => updatePreference('email', 'frequency', e.target.value)}
+                onChange={(e) =>
+                  updatePreference("email", "frequency", e.target.value)
+                }
                 className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="immediate">Immediate</option>
@@ -302,7 +324,13 @@ const NotificationPreferences = () => {
                       <input
                         type="checkbox"
                         checked={preferences.email.types[type.id]}
-                        onChange={(e) => updateTypePreference('email', type.id, e.target.checked)}
+                        onChange={(e) =>
+                          updateTypePreference(
+                            "email",
+                            type.id,
+                            e.target.checked,
+                          )
+                        }
                         className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                       />
                       <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded">
@@ -341,17 +369,17 @@ const NotificationPreferences = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3">
-            {!('Notification' in window) ? (
+            {!("Notification" in window) ? (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">
                 Not Supported
               </span>
-            ) : Notification.permission === 'denied' ? (
+            ) : Notification.permission === "denied" ? (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400">
                 Blocked
               </span>
-            ) : Notification.permission === 'granted' ? (
+            ) : Notification.permission === "granted" ? (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                 Enabled
               </span>
@@ -363,13 +391,18 @@ const NotificationPreferences = () => {
                 Enable
               </button>
             )}
-            
+
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={preferences.push.enabled && Notification.permission === 'granted'}
-                onChange={(e) => updatePreference('push', 'enabled', e.target.checked)}
-                disabled={Notification.permission !== 'granted'}
+                checked={
+                  preferences.push.enabled &&
+                  Notification.permission === "granted"
+                }
+                onChange={(e) =>
+                  updatePreference("push", "enabled", e.target.checked)
+                }
+                disabled={Notification.permission !== "granted"}
                 className="sr-only peer"
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600 disabled:opacity-50"></div>
@@ -377,10 +410,10 @@ const NotificationPreferences = () => {
           </div>
         </div>
 
-        {preferences.push.enabled && Notification.permission === 'granted' && (
+        {preferences.push.enabled && Notification.permission === "granted" && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4"
           >
@@ -395,7 +428,9 @@ const NotificationPreferences = () => {
                     <input
                       type="checkbox"
                       checked={preferences.push.types[type.id]}
-                      onChange={(e) => updateTypePreference('push', type.id, e.target.checked)}
+                      onChange={(e) =>
+                        updateTypePreference("push", type.id, e.target.checked)
+                      }
                       className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                     />
                     <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded">
@@ -443,12 +478,14 @@ const NotificationPreferences = () => {
               </p>
             </div>
           </div>
-          
+
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               checked={preferences.inApp.enabled}
-              onChange={(e) => updatePreference('inApp', 'enabled', e.target.checked)}
+              onChange={(e) =>
+                updatePreference("inApp", "enabled", e.target.checked)
+              }
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
@@ -458,7 +495,7 @@ const NotificationPreferences = () => {
         {preferences.inApp.enabled && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4"
           >
@@ -481,12 +518,14 @@ const NotificationPreferences = () => {
                   </div>
                 </div>
               </div>
-              
+
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={preferences.inApp.sound}
-                  onChange={(e) => updatePreference('inApp', 'sound', e.target.checked)}
+                  onChange={(e) =>
+                    updatePreference("inApp", "sound", e.target.checked)
+                  }
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
@@ -509,7 +548,13 @@ const NotificationPreferences = () => {
                       <input
                         type="checkbox"
                         checked={preferences.inApp.types[type.id]}
-                        onChange={(e) => updateTypePreference('inApp', type.id, e.target.checked)}
+                        onChange={(e) =>
+                          updateTypePreference(
+                            "inApp",
+                            type.id,
+                            e.target.checked,
+                          )
+                        }
                         className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                       />
                       <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded">
@@ -548,12 +593,14 @@ const NotificationPreferences = () => {
               </p>
             </div>
           </div>
-          
+
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               checked={preferences.quietHours.enabled}
-              onChange={(e) => updatePreference('quietHours', 'enabled', e.target.checked)}
+              onChange={(e) =>
+                updatePreference("quietHours", "enabled", e.target.checked)
+              }
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-600"></div>
@@ -563,7 +610,7 @@ const NotificationPreferences = () => {
         {preferences.quietHours.enabled && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 gap-4"
           >
@@ -574,11 +621,13 @@ const NotificationPreferences = () => {
               <input
                 type="time"
                 value={preferences.quietHours.start}
-                onChange={(e) => updatePreference('quietHours', 'start', e.target.value)}
+                onChange={(e) =>
+                  updatePreference("quietHours", "start", e.target.value)
+                }
                 className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 End Time
@@ -586,7 +635,9 @@ const NotificationPreferences = () => {
               <input
                 type="time"
                 value={preferences.quietHours.end}
-                onChange={(e) => updatePreference('quietHours', 'end', e.target.value)}
+                onChange={(e) =>
+                  updatePreference("quietHours", "end", e.target.value)
+                }
                 className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -619,7 +670,9 @@ const NotificationPreferences = () => {
                   disabled={updatePreferencesMutation.isPending}
                   className="inline-flex items-center px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {updatePreferencesMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updatePreferencesMutation.isPending
+                    ? "Saving..."
+                    : "Save Changes"}
                 </button>
               </div>
             </div>

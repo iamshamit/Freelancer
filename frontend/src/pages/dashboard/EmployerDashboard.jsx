@@ -10,7 +10,7 @@ import {
   Users,
   Plus,
   TrendingUp,
-  DollarSign,
+  IndianRupee,
   ChevronRight,
   Search,
   MessageSquare,
@@ -269,7 +269,7 @@ const EmployerDashboard = () => {
                 Budget Spent
               </h3>
               <span className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
-                <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <IndianRupee className="h-5 w-5 text-green-600 dark:text-green-400" />
               </span>
             </div>
             {jobsLoading ? (
@@ -277,7 +277,7 @@ const EmployerDashboard = () => {
             ) : (
               <>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  ${stats?.budgetSpent?.toFixed(2) || "0.00"}
+                  ₹{stats?.budgetSpent?.toFixed(2) || "0.00"}
                 </p>
                 <div className="mt-2 flex items-center text-sm">
                   <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
@@ -345,8 +345,8 @@ const EmployerDashboard = () => {
                             {job.domain?.name || "General"}
                           </span>
                           <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            <span>${job.budget?.toFixed(2) || "0.00"}</span>
+                            <IndianRupee className="h-4 w-4 mr-1" />
+                            <span>{job.budget?.toFixed(2) || "0.00"}</span>
                           </div>
                         </div>
 
@@ -454,8 +454,8 @@ const EmployerDashboard = () => {
                             {job.domain?.name || "General"}
                           </span>
                           <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            <span>${job.budget?.toFixed(2) || "0.00"}</span>
+                            <IndianRupee className="h-4 w-4 mr-1" />
+                            <span>{job.budget?.toFixed(2) || "0.00"}</span>
                           </div>
                         </div>
 
@@ -574,8 +574,8 @@ const EmployerDashboard = () => {
                             {job.domain?.name || "General"}
                           </span>
                           <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            <span>${job.budget?.toFixed(2) || "0.00"}</span>
+                            <IndianRupee className="h-4 w-4 mr-1" />
+                            <span>{job.budget?.toFixed(2) || "0.00"}</span>
                           </div>
                         </div>
 

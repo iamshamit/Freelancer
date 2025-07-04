@@ -206,7 +206,7 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                 <div className="flex items-center gap-3">
                   <JobStatusBadge status={job.status} />
                   <span className="text-gray-500 dark:text-gray-400">
-                    ${job.budget} • Posted on{" "}
+                    ₹{job.budget} • Posted on{" "}
                     {format(new Date(job.createdAt), "MMM d, yyyy")}
                   </span>
                 </div>
@@ -531,7 +531,9 @@ const ApplicantReviewPage = ({ darkMode, toggleDarkMode }) => {
                             </Link>
                           )}
 
-                        {job.freelancer && job.freelancer._id === selectedApplicant.freelancer._id ? (
+                        {job.freelancer &&
+                        job.freelancer._id ===
+                          selectedApplicant.freelancer._id ? (
                           <Button
                             onClick={handleMessageApplicant}
                             isLoading={messageMutation.isPending}

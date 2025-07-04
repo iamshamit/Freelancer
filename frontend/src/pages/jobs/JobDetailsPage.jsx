@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import AuthContext from "../../context/AuthContext";
 import {
   Briefcase,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Clock,
   User,
@@ -67,15 +67,15 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
   }, [job, domainData]);
 
   // Check if user has already applied
-  const hasApplied = job?.applicants?.some(
-    (applicant) => {
+  const hasApplied =
+    job?.applicants?.some((applicant) => {
       // Handle both object and string references
-      const freelancerId = typeof applicant.freelancer === 'object' 
-        ? applicant.freelancer._id || applicant.freelancer.id
-        : applicant.freelancer;
+      const freelancerId =
+        typeof applicant.freelancer === "object"
+          ? applicant.freelancer._id || applicant.freelancer.id
+          : applicant.freelancer;
       return freelancerId === user?._id;
-    }
-  ) || job?.hasApplied;
+    }) || job?.hasApplied;
 
   // Apply to job mutation
   const applyMutation = useMutation({
@@ -87,8 +87,11 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
       setTimeout(() => setShowApplySuccess(false), 5000);
     },
     onError: (error) => {
-      console.error('Apply mutation error:', error);
-      const message = error.response?.data?.message || error.message || "Failed to apply for job";
+      console.error("Apply mutation error:", error);
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to apply for job";
       setErrorMessage(message);
       setShowApplyError(true);
       setShowApplySuccess(false);
@@ -98,10 +101,11 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
 
   // Check if user can apply
   const canApply = () => {
-    if (!user || user.role !== 'freelancer') return false;
-    if (job?.status !== 'open') return false;
+    if (!user || user.role !== "freelancer") return false;
+    if (job?.status !== "open") return false;
     if (hasApplied) return false;
-    if (job?.employer?._id === user._id || job?.employer === user._id) return false; // Can't apply to own job
+    if (job?.employer?._id === user._id || job?.employer === user._id)
+      return false; // Can't apply to own job
     return true;
   };
 
@@ -155,7 +159,7 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
         {/* Back navigation */}
         <div className="mb-6">
           <Link
-            to={`${user?.role === 'employer' ? '/employer' : ''}/jobs`}
+            to={`${user?.role === "employer" ? "/employer" : ""}/jobs`}
             className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
           >
             <ChevronLeft className="h-5 w-5 mr-1" />
@@ -209,9 +213,9 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
 
               <div className="flex flex-wrap gap-6 mb-6">
                 <div className="flex items-center text-green-600 dark:text-green-400 font-semibold">
-                  <DollarSign className="h-5 w-5 mr-1" />
+                  <IndianRupee className="h-5 w-5 mr-1" />
                   <span>
-                    $
+                    
                     {typeof job.budget === "number"
                       ? job.budget.toFixed(2)
                       : "N/A"}
@@ -271,7 +275,7 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
                           Member since{" "}
                           {format(
                             new Date(job.employer.memberSince),
-                            "MMM yyyy"
+                            "MMM yyyy",
                           )}
                         </p>
                       )}
@@ -281,7 +285,7 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
               </div>
 
               {/* Apply button - Only show for freelancers */}
-              {user?.role === 'freelancer' && (
+              {user?.role === "freelancer" && (
                 <div className="mb-6">
                   {job.status === "open" ? (
                     <>
@@ -296,20 +300,26 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
                       </Button>
                       {hasApplied && (
                         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                          You have already applied to this job. The employer will
-                          contact you if interested.
+                          You have already applied to this job. The employer
+                          will contact you if interested.
                         </p>
                       )}
-                      {!canApply() && !hasApplied && user?.role === 'freelancer' && (
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                          This job is no longer accepting applications.
-                        </p>
-                      )}
+                      {!canApply() &&
+                        !hasApplied &&
+                        user?.role === "freelancer" && (
+                          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            This job is no longer accepting applications.
+                          </p>
+                        )}
                     </>
                   ) : (
                     <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                       <p className="text-gray-600 dark:text-gray-400">
-                        This job is {job.status === 'assigned' ? 'already assigned' : 'closed'}.
+                        This job is{" "}
+                        {job.status === "assigned"
+                          ? "already assigned"
+                          : "closed"}
+                        .
                       </p>
                     </div>
                   )}
@@ -317,11 +327,16 @@ const JobDetailPage = ({ darkMode, toggleDarkMode }) => {
               )}
 
               {/* Message for employers viewing their own job */}
-              {user?.role === 'employer' && (job.employer?._id === user._id || job.employer === user._id) && (
-                <div className="mb-6 p-4 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-400 rounded-lg">
-                  <p>This is your job posting. You can manage applications from your employer dashboard.</p>
-                </div>
-              )}
+              {user?.role === "employer" &&
+                (job.employer?._id === user._id ||
+                  job.employer === user._id) && (
+                  <div className="mb-6 p-4 bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-400 rounded-lg">
+                    <p>
+                      This is your job posting. You can manage applications from
+                      your employer dashboard.
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
 

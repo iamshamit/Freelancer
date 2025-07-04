@@ -1,16 +1,16 @@
 // src/components/milestones/MilestoneCard.jsx
-import { motion } from 'framer-motion';
-import { Calendar, DollarSign, FileText, ChevronRight } from 'lucide-react';
-import MilestoneStatusBadge from './MilestoneStatusBadge';
-import Button from '../common/Button';
+import { motion } from "framer-motion";
+import { Calendar, IndianRupee, FileText, ChevronRight } from "lucide-react";
+import MilestoneStatusBadge from "./MilestoneStatusBadge";
+import Button from "../common/Button";
 
-const MilestoneCard = ({ 
-  milestone, 
-  onApprove, 
-  onRequestApproval, 
+const MilestoneCard = ({
+  milestone,
+  onApprove,
+  onRequestApproval,
   onView,
   isEmployer,
-  index = 0 
+  index = 0,
 }) => {
   const { title, description, percentage, amount, status, dueDate } = milestone;
 
@@ -42,11 +42,11 @@ const MilestoneCard = ({
 
         <div className="flex items-center gap-2">
           <div className="p-2 bg-gray-700 rounded-lg">
-            <DollarSign className="w-4 h-4 text-gray-400" />
+            <IndianRupee className="w-4 h-4 text-gray-400" />
           </div>
           <div>
             <p className="text-xs text-gray-500">Amount</p>
-            <p className="text-sm font-medium text-white">${amount}</p>
+            <p className="text-sm font-medium text-white">₹{amount}</p>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ const MilestoneCard = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {status === 'completed' && isEmployer && (
+        {status === "completed" && isEmployer && (
           <Button
             variant="primary"
             size="sm"
@@ -74,8 +74,8 @@ const MilestoneCard = ({
             Approve & Release Payment
           </Button>
         )}
-        
-        {status === 'in_progress' && !isEmployer && (
+
+        {status === "in_progress" && !isEmployer && (
           <Button
             variant="primary"
             size="sm"

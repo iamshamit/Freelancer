@@ -3,17 +3,17 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { 
-  Calendar, 
-  DollarSign, 
-  Users, 
-  Eye, 
-  MessageSquare, 
-  Target, 
+import {
+  Calendar,
+  Users,
+  Eye,
+  MessageSquare,
+  Target,
   User,
   Award,
   Star,
-  Archive
+  Archive,
+  IndianRupee
 } from "lucide-react";
 import { format } from "date-fns";
 import Button from "../common/Button";
@@ -24,7 +24,7 @@ import api from "../../services/api";
 const EmployerJobCard = ({ job }) => {
   const navigate = useNavigate();
   const hasSelectedFreelancer = job.freelancer;
-  const isCompleted = job.status === 'completed';
+  const isCompleted = job.status === "completed";
   const applicantCount = job.applicants?.length || 0;
 
   // Message freelancer mutation
@@ -36,7 +36,7 @@ const EmployerJobCard = ({ job }) => {
     onError: (error) => {
       console.error("Error creating chat:", error);
       // You might want to show a toast notification here
-    }
+    },
   });
 
   const handleMessageFreelancer = (e) => {
@@ -80,8 +80,8 @@ const EmployerJobCard = ({ job }) => {
         {/* Job details */}
         <div className="space-y-2 mb-4">
           <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-            <DollarSign className="h-4 w-4 mr-2" />
-            <span className="font-medium">${job.budget}</span>
+            <IndianRupee className="h-4 w-4 mr-2" />
+            <span className="font-medium">{job.budget}</span>
           </div>
           <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
             <Calendar className="h-4 w-4 mr-2" />
@@ -90,7 +90,9 @@ const EmployerJobCard = ({ job }) => {
           {!hasSelectedFreelancer && (
             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
               <Users className="h-4 w-4 mr-2" />
-              <span>{applicantCount} applicant{applicantCount !== 1 ? 's' : ''}</span>
+              <span>
+                {applicantCount} applicant{applicantCount !== 1 ? "s" : ""}
+              </span>
             </div>
           )}
         </div>
@@ -113,7 +115,7 @@ const EmployerJobCard = ({ job }) => {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <Link 
+                <Link
                   to={`/profile/${job.freelancer._id}`}
                   className="font-medium text-gray-900 dark:text-white hover:text-orange-500 dark:hover:text-orange-400 transition-colors truncate block"
                 >
@@ -188,13 +190,17 @@ const EmployerJobCard = ({ job }) => {
           ) : (
             // Show original buttons for jobs without selected freelancer
             <>
-              <Link to={`/employer/jobs/${job._id}/applicants`} className="flex-1">
+              <Link
+                to={`/employer/jobs/${job._id}/applicants`}
+                className="flex-1"
+              >
                 <Button
                   size="sm"
                   className="w-full flex items-center justify-center bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white border-0"
                 >
                   <Users className="h-4 w-4 mr-1" />
-                  {applicantCount > 0 ? `View ${applicantCount}` : 'View'} Applicants
+                  {applicantCount > 0 ? `View ${applicantCount}` : "View"}{" "}
+                  Applicants
                 </Button>
               </Link>
               <Link to={`/job/${job._id}`} className="flex-1">
