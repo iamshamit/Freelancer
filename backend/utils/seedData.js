@@ -102,69 +102,44 @@ const domains = [
     name: 'AI & Machine Learning',
     description: 'Artificial intelligence solutions, ML model development, and automation',
     icon: 'psychology'
+  },
+  {
+    name: 'Event Planning',
+    description: 'Planning and execution of events, meetings, and conferences',
+    icon: 'event'
+  },
+  {
+    name: 'Personal Training',
+    description: 'Fitness coaching, workout planning, and health advice',
+    icon: 'fitness_center'
+  },
+  {
+    name: 'Tutoring & Education',
+    description: 'Online tutoring, academic assistance, and educational support services',
+    icon: 'school'
+  },
+  {
+   name: 'Legal Services',
+   description: 'Legal Consultation, document review, and legal representation',
+   icon: 'gavel'
+  },
+  {
+    name: 'Customer Service',
+    description: 'Providing customer support, handling inquiries, and resolving issues',
+    icon: 'headset_mic'
   }
 ];
 
 // Seed admin user
 const adminUser = {
   name: 'Admin User',
-  email: 'admin@freelanceplatform.com',
-  password: 'admin123456',
+  email: 'shamitmishra@gmail.com',
+  password: 'iamshamit',
   role: 'admin',
-  bio: 'Platform administrator'
+  bio: 'i am him!'
 };
 
-// Sample freelancer users for testing
-const sampleFreelancers = [
-  {
-    name: 'John Developer',
-    email: 'john@example.com',
-    password: 'password123',
-    role: 'freelancer',
-    skills: ['JavaScript', 'React', 'Node.js', 'MongoDB'],
-    bio: 'Full-stack developer with 5+ years of experience in modern web technologies.',
-    averageRating: 4.8,
-    completedJobs: 15
-  },
-  {
-    name: 'Sarah Designer',
-    email: 'sarah@example.com', 
-    password: 'password123',
-    role: 'freelancer',
-    skills: ['UI/UX Design', 'Figma', 'Adobe Photoshop', 'Graphic Design'],
-    bio: 'Creative designer specializing in user-centered design and brand identity.',
-    averageRating: 4.9,
-    completedJobs: 23
-  },
-  {
-    name: 'Mike Marketer',
-    email: 'mike@example.com',
-    password: 'password123', 
-    role: 'freelancer',
-    skills: ['Digital Marketing', 'SEO', 'Google Ads', 'Content Writing'],
-    bio: 'Digital marketing expert helping businesses grow their online presence.',
-    averageRating: 4.7,
-    completedJobs: 31
-  }
-];
 
-// Sample employer users
-const sampleEmployers = [
-  {
-    name: 'TechCorp Inc',
-    email: 'hr@techcorp.com',
-    password: 'password1234',
-    role: 'employer',
-    bio: 'Leading technology company seeking talented freelancers for innovative projects.'
-  },
-  {
-    name: 'Creative Agency',
-    email: 'contact@creativeagency.com', 
-    password: 'password123',
-    role: 'employer',
-    bio: 'Full-service creative agency working with brands to create meaningful experiences.'
-  }
-];
 
 // Seed function
 const seedData = async () => {
@@ -189,22 +164,22 @@ const seedData = async () => {
       console.log('ℹ️  Admin user already exists');
     }
     
-    // Create sample users (optional - comment out in production)
-    const existingUsers = await User.countDocuments({ role: { $in: ['freelancer', 'employer'] } });
+    // // Create sample users (optional - comment out in production)
+    // const existingUsers = await User.countDocuments({ role: { $in: ['freelancer', 'employer'] } });
     
-    if (existingUsers === 0) {
-      // Hash passwords for sample users
-      const saltRounds = 10;
+    // if (existingUsers === 0) {
+    //   // Hash passwords for sample users
+    //   const saltRounds = 10;
       
-      for (let user of [...sampleFreelancers, ...sampleEmployers]) {
-        user.password = await bcrypt.hash(user.password, saltRounds);
-      }
+    //   for (let user of [...sampleFreelancers, ...sampleEmployers]) {
+    //     user.password = await bcrypt.hash(user.password, saltRounds);
+    //   }
       
-      await User.insertMany([...sampleFreelancers, ...sampleEmployers]);
-      console.log(`✅ Created ${sampleFreelancers.length + sampleEmployers.length} sample users`);
-    } else {
-      console.log('ℹ️  Sample users already exist');
-    }
+    //   await User.insertMany([...sampleFreelancers, ...sampleEmployers]);
+    //   console.log(`✅ Created ${sampleFreelancers.length + sampleEmployers.length} sample users`);
+    // } else {
+    //   console.log('ℹ️  Sample users already exist');
+    // }
     
     console.log('🎉 Database seeding completed successfully!');
     console.log('\nCreated domains:');
